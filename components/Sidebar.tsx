@@ -10,11 +10,12 @@ export async function Sidebar() {
     const { data: { user } } = await supabase.auth.getUser()
 
     let profile: Profile | null = null
+    let pendingTasksCount = 0
+
     if (user) {
         const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
         profile = data
     }
-
 
     return (
         <div className="shrink-0 h-full z-40">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Task, Project, Profile } from '@/types'
-import { List, LayoutGrid, Calendar, Plus, Settings, Filter, Check, ChevronDown } from 'lucide-react'
+import { List, LayoutGrid, Calendar, Plus, Settings, Filter, Check, ChevronDown, Users } from 'lucide-react'
 import { TaskList } from '@/components/dashboard/TaskList'
 import { KanbanView } from '@/components/dashboard/KanbanView'
 import { GanttView } from '@/components/dashboard/GanttView'
@@ -22,7 +22,7 @@ export default function DashboardClient({
     profiles,
     initialProjectId = null,
     hideProjectFilters = false,
-    title = "Today's Focus",
+    title = "Today's Kaizen",
     currentUserId,
     currentUserRole
 }: {
@@ -43,10 +43,12 @@ export default function DashboardClient({
     const router = useRouter()
     const searchParams = useSearchParams()
     const [hasCheckedArchival, setHasCheckedArchival] = useState(false)
+    const [activeAssigneeId, setActiveAssigneeId] = useState<string | null>(null)
 
     // Project Edit Modal State
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
     const [isFilterOpen, setIsFilterOpen] = useState(false)
+    const [isAssigneeFilterOpen, setIsAssigneeFilterOpen] = useState(false)
     const currentProject = projects.find(p => p.id === activeProjectId)
 
     // Auto-Open Modal from URL
@@ -100,6 +102,12 @@ export default function DashboardClient({
         const taskProject = projects.find(p => p.id === t.project_id)
         if (taskProject && taskProject.status === 'archived') {
             return false
+        }
+
+        // Assignee Filter
+        if (activeAssigneeId) {
+            const hasAssignee = t.assignees?.some(a => a.id === activeAssigneeId)
+            if (!hasAssignee) return false
         }
 
         return true
@@ -156,7 +164,10 @@ export default function DashboardClient({
                     </div>
 
                     <p className="text-muted-foreground mt-2">
-                        {format(new Date(), 'MMM d, yyyy')} • You have {pendingCount} pending tasks.
+                        {format(new Date(), 'MMM d, yyyy')} • {title === 'Team Tasks'
+                            ? `Team has ${pendingCount} pending tasks from various projects.`
+                            : `You have ${pendingCount} pending tasks.`
+                        }
                     </p>
                 </div>
 
@@ -173,57 +184,107 @@ export default function DashboardClient({
 
             {/* Filters & Controls Bar */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                {/* Project Filter Dropdown */}
-                {!hideProjectFilters ? (
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors min-w-[200px] justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <Filter className="w-4 h-4 text-muted-foreground" />
-                                {activeProjectId ? (
-                                    <span className="flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: projects.find(p => p.id === activeProjectId)?.color_code }}></span>
-                                        {projects.find(p => p.id === activeProjectId)?.name}
-                                    </span>
-                                ) : (
-                                    <span>All Projects</span>
-                                )}
-                            </div>
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        </button>
-
-                        {isFilterOpen && (
-                            <>
-                                <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
-                                <div className="absolute top-full mt-2 left-0 w-[240px] bg-card border border-border rounded-lg shadow-lg z-50 py-1 max-h-[300px] overflow-y-auto">
-                                    <button
-                                        onClick={() => { setActiveProjectId(null); setIsFilterOpen(false) }}
-                                        className="w-full text-left px-3 py-2 text-sm hover:bg-secondary flex items-center justify-between group"
-                                    >
+                <div className="flex items-center gap-2">
+                    {/* Project Filter Dropdown */}
+                    {!hideProjectFilters && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors min-w-[200px] justify-between"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-4 h-4 text-muted-foreground" />
+                                    {activeProjectId ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: projects.find(p => p.id === activeProjectId)?.color_code }}></span>
+                                            {projects.find(p => p.id === activeProjectId)?.name}
+                                        </span>
+                                    ) : (
                                         <span>All Projects</span>
-                                        {activeProjectId === null && <Check className="w-4 h-4 text-primary" />}
-                                    </button>
-                                    <div className="h-px bg-border my-1" />
-                                    {projects.map(p => (
+                                    )}
+                                </div>
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            </button>
+
+                            {isFilterOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
+                                    <div className="absolute top-full mt-2 left-0 w-[240px] bg-card border border-border rounded-lg shadow-lg z-50 py-1 max-h-[300px] overflow-y-auto">
                                         <button
-                                            key={p.id}
-                                            onClick={() => { setActiveProjectId(p.id); setIsFilterOpen(false) }}
+                                            onClick={() => { setActiveProjectId(null); setIsFilterOpen(false) }}
                                             className="w-full text-left px-3 py-2 text-sm hover:bg-secondary flex items-center justify-between group"
                                         >
-                                            <span className="flex items-center gap-2">
-                                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color_code }}></span>
-                                                {p.name}
-                                            </span>
-                                            {activeProjectId === p.id && <Check className="w-4 h-4 text-primary" />}
+                                            <span>All Projects</span>
+                                            {activeProjectId === null && <Check className="w-4 h-4 text-primary" />}
                                         </button>
-                                    ))}
+                                        <div className="h-px bg-border my-1" />
+                                        {projects.map(p => (
+                                            <button
+                                                key={p.id}
+                                                onClick={() => { setActiveProjectId(p.id); setIsFilterOpen(false) }}
+                                                className="w-full text-left px-3 py-2 text-sm hover:bg-secondary flex items-center justify-between group"
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color_code }}></span>
+                                                    {p.name}
+                                                </span>
+                                                {activeProjectId === p.id && <Check className="w-4 h-4 text-primary" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Assignee Filter Dropdown - Only for Team Tasks */}
+                    {title === 'Team Tasks' && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsAssigneeFilterOpen(!isAssigneeFilterOpen)}
+                                className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-secondary transition-colors min-w-[200px] justify-between"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Users className="w-4 h-4 text-muted-foreground" />
+                                    {activeAssigneeId ? (
+                                        <span>
+                                            {profiles.find(p => p.id === activeAssigneeId)?.full_name || 'Unknown User'}
+                                        </span>
+                                    ) : (
+                                        <span>All Assignees</span>
+                                    )}
                                 </div>
-                            </>
-                        )}
-                    </div>
-                ) : <div></div>}
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            </button>
+
+                            {isAssigneeFilterOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setIsAssigneeFilterOpen(false)} />
+                                    <div className="absolute top-full mt-2 left-0 w-[240px] bg-card border border-border rounded-lg shadow-lg z-50 py-1 max-h-[300px] overflow-y-auto">
+                                        <button
+                                            onClick={() => { setActiveAssigneeId(null); setIsAssigneeFilterOpen(false) }}
+                                            className="w-full text-left px-3 py-2 text-sm hover:bg-secondary flex items-center justify-between group"
+                                        >
+                                            <span>All Assignees</span>
+                                            {activeAssigneeId === null && <Check className="w-4 h-4 text-primary" />}
+                                        </button>
+                                        <div className="h-px bg-border my-1" />
+                                        {profiles.map(p => (
+                                            <button
+                                                key={p.id}
+                                                onClick={() => { setActiveAssigneeId(p.id); setIsAssigneeFilterOpen(false) }}
+                                                className="w-full text-left px-3 py-2 text-sm hover:bg-secondary flex items-center justify-between group"
+                                            >
+                                                <span className="truncate">{p.full_name}</span>
+                                                {activeAssigneeId === p.id && <Check className="w-4 h-4 text-primary" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 {/* View Toggle */}
                 <div className="border border-border/50 rounded-lg p-1 bg-card/50 w-fit flex gap-1 backdrop-blur-sm">
@@ -249,7 +310,7 @@ export default function DashboardClient({
             </div>
 
             {/* Content Area */}
-            <div className={`min-h-[400px] ${view === 'kanban' ? 'h-[calc(100vh-320px)]' : ''}`}>
+            <div className={`min-h-[400px] ${view === 'kanban' ? 'h-[calc(100vh-220px)]' : ''}`}>
                 {view === 'list' && (
                     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                         <TaskList tasks={filteredTasks} onEdit={handleEditTask} />
@@ -261,23 +322,28 @@ export default function DashboardClient({
                 {view === 'gantt' && <GanttView tasks={filteredTasks} />}
             </div>
 
-            {isModalOpen && (
-                <TaskModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    projects={projects}
-                    profiles={profiles}
-                    taskToEdit={taskToEdit}
-                />
-            )}
+            {
+                isModalOpen && (
+                    <TaskModal
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                        projects={projects}
+                        profiles={profiles}
+                        taskToEdit={taskToEdit}
+                        defaultProjectId={activeProjectId}
+                    />
+                )
+            }
 
-            {isProjectModalOpen && (
-                <ProjectModal
-                    isOpen={isProjectModalOpen}
-                    onClose={() => setIsProjectModalOpen(false)}
-                    projectToEdit={currentProject}
-                />
-            )}
-        </div>
+            {
+                isProjectModalOpen && (
+                    <ProjectModal
+                        isOpen={isProjectModalOpen}
+                        onClose={() => setIsProjectModalOpen(false)}
+                        projectToEdit={currentProject}
+                    />
+                )
+            }
+        </div >
     )
 }

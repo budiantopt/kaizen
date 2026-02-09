@@ -207,3 +207,35 @@ export async function resetUserPassword(userId: string, email: string, name: str
 
     return { message: 'Password reset and emailed', success: true, newPassword }
 }
+
+export async function updateUserPassword(prevState: any, formData: FormData) {
+    const userId = formData.get('userId') as string
+    const password = formData.get('password') as string
+
+    if (!userId || !password) return { message: 'Missing required fields', success: false }
+    if (password.length < 6) return { message: 'Password too short', success: false }
+
+    const supabase = await createClient()
+
+    // Auth Check
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { message: 'Unauthorized', success: false }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') return { message: 'Unauthorized', success: false }
+
+    let supabaseAdmin
+    try {
+        supabaseAdmin = createAdminClient()
+    } catch (e: any) {
+        return { message: "Server config error: " + e.message, success: false }
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+        password: password
+    })
+
+    if (error) return { message: 'Failed to update password: ' + error.message, success: false }
+
+    return { message: 'Password updated successfully', success: true }
+}

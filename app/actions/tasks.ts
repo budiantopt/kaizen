@@ -189,10 +189,9 @@ export async function updateTaskStatus(taskId: number, newStatus: string) {
     const now = new Date().toISOString()
 
     // If moving to done/complete, set completed_at. If moving away, clear it.
-    // Note: This might reset completed_at if moving within done columns, but assumes status change triggers this.
     const isCompleted = newStatus === 'done' || newStatus === 'complete'
 
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('tasks')
         .update({
             status: newStatus,
@@ -200,8 +199,20 @@ export async function updateTaskStatus(taskId: number, newStatus: string) {
             completed_at: isCompleted ? now : null
         })
         .eq('id', taskId)
+        .select()
+        .single()
 
-    if (error) throw new Error('Failed to update task status')
+    if (error) {
+        console.error("Update Task Status Error:", error)
+        throw new Error('Failed to update task status')
+    }
+
+    // If RLS allows UPDATE but filters the row (e.g. not assignee), data might be null or error "PGRST116" (JSON object requested, multiple (or no) rows returned).
+    // .single() usually throws if 0 rows.
+    if (!data) {
+        throw new Error('Task not found or permission denied')
+    }
+
     revalidatePath('/dashboard')
     revalidatePath('/admin/kanban')
 }

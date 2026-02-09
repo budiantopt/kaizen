@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const runtime = 'edge';
 import { createClient } from '@/lib/supabase/server';
 // import { Resend } from 'resend';
 

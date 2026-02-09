@@ -81,22 +81,22 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                I will Modify DashboardClient to REMOVE the hardcoded header and put it here.
             */}
             <div className="bg-muted/30 text-muted-foreground font-medium border-b border-border flex p-4 text-sm sticky top-0 backdrop-blur-md z-10">
-                <Header field="title" label="Task" width="w-[40%]" />
-                <Header field="project" label="Project" width="w-[15%]" />
-                <Header field="status" label="Status" width="w-[15%]" />
-                <Header field="priority" label="Priority" width="w-[10%]" />
+                <Header field="title" label="Task" width="w-[30%]" />
+                <Header field="project" label="Project" width="w-[25%]" />
+                <Header field="status" label="Status" width="w-[12%]" />
+                <Header field="priority" label="Priority" width="w-[8%]" />
                 <Header field="end_date" label="Due Date" width="w-[15%]" />
-                <Header field="assignee" label="Assignee" width="w-[15%]" />
+                <Header field="assignee" label="Assignee" width="w-[10%]" />
             </div>
 
             <div className="divide-y divide-border/50">
                 {sortedTasks.map((task) => (
                     <div
                         key={task.id}
-                        className="group flex items-center p-4 cursor-pointer hover:bg-secondary/50"
+                        className="group flex items-center py-3 px-4 cursor-pointer hover:bg-secondary/50"
                         onClick={() => onEdit && onEdit(task)}
                     >
-                        <div className="w-[40%] flex items-center gap-3">
+                        <div className="w-[30%] flex items-center gap-3">
                             <button
                                 onClick={async (e) => {
                                     e.stopPropagation()
@@ -116,12 +116,12 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                             >
                                 {(task.status === 'done' || task.status === 'complete') && <Check className="w-3 h-3" />}
                             </button>
-                            <span className={`font-medium ${task.status === 'done' || task.status === 'complete' ? 'text-muted-foreground/50 line-through' : 'text-foreground'}`}>
+                            <span title={task.title} className={`font-medium truncate ${task.status === 'done' || task.status === 'complete' ? 'text-muted-foreground/50 line-through' : 'text-foreground'}`}>
                                 {task.title}
                             </span>
                         </div>
 
-                        <div className="w-[15%]">
+                        <div className="w-[25%]">
                             {task.project && (
                                 <span
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-border bg-neutral-900/50 text-neutral-300"
@@ -130,12 +130,17 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                                         className="w-1.5 h-1.5 rounded-full"
                                         style={{ backgroundColor: task.project.color_code || '#fff' }}
                                     ></span>
-                                    {task.project.name}
+                                    <span
+                                        className="truncate max-w-[150px]"
+                                        title={task.project.name}
+                                    >
+                                        {task.project.name}
+                                    </span>
                                 </span>
                             )}
                         </div>
 
-                        <div className="w-[15%]">
+                        <div className="w-[12%]">
                             {(() => {
                                 const statusColors: Record<string, string> = {
                                     'todo': 'text-neutral-500 border-neutral-500/20 bg-neutral-500/10',
@@ -157,7 +162,7 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                             })()}
                         </div>
 
-                        <div className="w-[10%]">
+                        <div className="w-[8%]">
                             {(() => {
                                 const priorityColors: Record<string, string> = {
                                     'low': 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20',
@@ -180,7 +185,7 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                             {task.end_date ? format(new Date(task.end_date), 'MMM d') : '-'}
                         </div>
 
-                        <div className="w-[15%] flex -space-x-2 overflow-hidden items-center">
+                        <div className="w-[10%] flex -space-x-2 overflow-hidden items-center">
                             {task.assignees && task.assignees.length > 0 ? (
                                 task.assignees.map((assignee, i) => (
                                     <div key={i} className="w-6 h-6 rounded-full bg-neutral-800 border-2 border-background flex items-center justify-center text-[8px] font-bold text-white z-10" title={assignee.full_name || 'User'}>

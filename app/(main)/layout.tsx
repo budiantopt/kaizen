@@ -3,6 +3,7 @@ import { ToastListener } from '@/components/ui/toast-listener'
 import { getActiveAnnouncement } from '@/app/actions/announcements'
 import { AnnouncementBanner } from '@/components/AnnouncementBanner'
 import { CommandMenu } from '@/components/CommandMenu'
+import { ProfileModalProvider } from '@/components/providers/ProfileModalProvider'
 
 export default async function MainLayout({
     children,
@@ -16,13 +17,15 @@ export default async function MainLayout({
             <CommandMenu />
             <AnnouncementBanner announcement={announcement} />
             <div className="flex flex-1 overflow-hidden">
-                <Sidebar />
-                <main className="flex-1 p-4 overflow-y-auto h-full">
-                    <div className="w-full h-full">
-                        <ToastListener />
-                        {children}
-                    </div>
-                </main>
+                <ProfileModalProvider>
+                    <Sidebar />
+                    <main className="flex-1 p-4 overflow-y-auto h-full">
+                        <div className="w-full h-full">
+                            <ToastListener />
+                            {children}
+                        </div>
+                    </main>
+                </ProfileModalProvider>
             </div>
         </div>
     )

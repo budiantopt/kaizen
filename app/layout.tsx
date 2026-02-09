@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+export const runtime = 'edge';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
@@ -14,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kaizen | Zero Friction Project Management",
-  description: "Minimalist project management for high-velocity teams.",
+  title: "Kaizen",
+  description: "Align your team's semester goals, track KPIs, and manage projects with clarity and precision.",
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

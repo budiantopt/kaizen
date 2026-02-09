@@ -59,8 +59,8 @@ export default async function AdminKanbanPage() {
         <div className="h-[calc(100vh-2rem)] flex flex-col -mt-4 pl-4">
             <div className="mb-2 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-bold tracking-tight">Global Kanban</h1>
-                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full border border-border">All Tasks</span>
+                    <h1 className="text-lg font-bold tracking-tight">Gemba</h1>
+                    <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full border border-border">Go and See</span>
                 </div>
             </div>
 

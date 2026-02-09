@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { login, signup } from './actions'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/toast-context'
-import { Circle } from 'lucide-react'
+
 
 function LoginForm() {
     const searchParams = useSearchParams()
@@ -52,8 +52,8 @@ function LoginForm() {
 
             <div className="w-full max-w-sm space-y-8 relative z-10">
                 <div className="text-center">
-                    <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-white to-neutral-300 flex items-center justify-center shadow-2xl shadow-white/10 mb-6 group transition-all duration-500 hover:scale-105">
-                        <Circle className="h-4 w-4 text-black fill-black transition-all duration-500" />
+                    <div className="mx-auto h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl shadow-white/10 mb-6 group transition-all duration-500 hover:scale-105">
+                        <div className="w-6 h-6 bg-black rounded-full" />
                     </div>
                     <h2 className="text-3xl font-bold tracking-tight text-foreground">
                         {isLogin ? 'Welcome back' : 'Create an account'}
@@ -132,6 +132,7 @@ function LoginForm() {
                         </button>
                     </div>
 
+                    {/* Sign up disabled
                     <div className="text-center">
                         <button
                             type="button"
@@ -140,8 +141,15 @@ function LoginForm() {
                         >
                             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
                         </button>
-                    </div>
+                    </div> 
+                    */}
                 </form>
+
+                <div className="text-center mt-6">
+                    <a href="/guide" className="text-xs text-muted-foreground hover:text-foreground transition-colors border-b border-transparent hover:border-foreground/20 pb-0.5">
+                        Read the Kaizen Guide
+                    </a>
+                </div>
             </div>
         </div>
     )

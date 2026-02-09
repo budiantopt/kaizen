@@ -18,6 +18,7 @@ interface TaskModalProps {
     projects: Project[]
     profiles: Profile[]
     taskToEdit?: Task | null
+    defaultProjectId?: number | null
 }
 
 const PRESET_COLORS = [
@@ -33,7 +34,7 @@ const PRESET_COLORS = [
     '#71717a', // Zinc
 ]
 
-export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId }: TaskModalProps) {
     const [state, formAction, isPending] = useActionState(upsertTask, initialState)
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
     const [currentStatus, setCurrentStatus] = useState<string>(taskToEdit?.status || 'todo')
@@ -124,7 +125,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit }: T
                                 <div className="relative">
                                     <select
                                         name="project_id"
-                                        defaultValue={taskToEdit?.project_id}
+                                        defaultValue={taskToEdit?.project_id || defaultProjectId || ""}
                                         className="cursor-pointer w-full bg-secondary/30 border border-border rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-white/20 transition-all appearance-none font-medium"
                                     >
                                         <option value="" disabled>Select Project</option>

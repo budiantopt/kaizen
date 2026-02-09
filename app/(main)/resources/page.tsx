@@ -16,10 +16,28 @@ export default async function ResourcesPage() {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
     const isAdmin = profile?.role === 'admin'
 
-    const { data: resources } = await supabase
+    const { data: resourcesData } = await supabase
         .from('resources')
         .select('*')
         .order('id', { ascending: true })
+
+    // Fetch profiles for the creators
+    const userIds = Array.from(new Set(resourcesData?.map(r => r.created_by).filter(Boolean) as string[])) || []
+    let resources = resourcesData || []
+
+    if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, email')
+            .in('id', userIds)
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]))
+
+        resources = resources.map(r => ({
+            ...r,
+            creator: r.created_by ? profileMap.get(r.created_by) : undefined
+        }))
+    }
 
     const hasData = (resources && resources.length > 0) || false
 

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, CheckSquare, BarChart2, Layers, Circle, ShieldAlert, LogOut, Megaphone, Users, Library } from 'lucide-react'
+import { LayoutGrid, CheckSquare, Gauge, Layers, Circle, ShieldAlert, LogOut, Megaphone, Users, Library } from 'lucide-react'
 import { Profile } from '@/types'
 import { signOut } from '@/app/actions/auth'
 import { getInitials } from '@/lib/utils'
@@ -14,7 +14,7 @@ const navigation = [
     { name: 'Team Tasks', href: '/dashboard', icon: LayoutGrid },
     { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
     { name: 'Projects', href: '/projects', icon: Layers },
-    { name: 'Performance', href: '/performance', icon: BarChart2 },
+    { name: 'Performance', href: '/performance', icon: Gauge },
     { name: 'Resources', href: '/resources', icon: Library },
 ]
 
@@ -60,7 +60,9 @@ function WorkClock() {
 
 
 
-import { ChevronRight, ChevronLeft, Monitor } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { ChevronRight, ChevronLeft, Monitor, Key } from 'lucide-react'
+import { useProfileModal } from '@/components/providers/ProfileModalProvider'
 
 // ... existing WorkClock (no changes needed) ...
 
@@ -68,6 +70,45 @@ export function SidebarContent({ profile }: { profile: Profile | null }) {
     const pathname = usePathname()
     const isAdmin = profile?.role === 'admin'
     const [isCollapsed, setIsCollapsed] = useState(true)
+    const [pendingTasksCount, setPendingTasksCount] = useState(0)
+    const { openProfileModal } = useProfileModal()
+    const supabase = createClient()
+
+    // Fetch and Update Document Title
+    useEffect(() => {
+        const fetchCount = async () => {
+            if (!profile?.id) return
+
+            try {
+                // Querying task_assignees is often more reliable for "my tasks"
+                const { count, error } = await supabase
+                    .from('task_assignees')
+                    .select('task_id, tasks!inner(status)', { count: 'exact', head: true })
+                    .eq('user_id', profile.id)
+                    // If we want neq done/complete:
+                    .neq('tasks.status', 'done')
+                    .neq('tasks.status', 'complete')
+                // Note: Supabase might interpret 'tasks.status' only if 'tasks' is embedded with !inner
+
+                if (error) throw error
+                if (count !== null) setPendingTasksCount(count)
+            } catch (err) {
+                console.error("Failed to fetch pending tasks count", JSON.stringify(err, null, 2))
+            }
+        }
+
+        fetchCount()
+
+        // Poll every minute or when path changes (to catch updates after navigation)
+        // Also could subscribe to changes, but polling is simpler for count
+        const interval = setInterval(fetchCount, 60000)
+        return () => clearInterval(interval)
+    }, [pathname, profile?.id, supabase]) // Re-run on navigation to refresh count
+
+    // Update Title Effect
+    useEffect(() => {
+        document.title = `Kaizen | ${pendingTasksCount} pending tasks`
+    }, [pendingTasksCount, pathname])
 
     // Get initial for avatar
     const initial = getInitials(profile?.full_name)
@@ -123,14 +164,14 @@ export function SidebarContent({ profile }: { profile: Profile | null }) {
 
                         <Link
                             href="/admin/kanban"
-                            title={isCollapsed ? "Full Kanban" : ''}
+                            title={isCollapsed ? "Gemba" : ''}
                             className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/kanban')
                                 ? 'bg-foreground text-background shadow-md'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                         >
                             <Monitor className={`w-5 h-5 ${pathname.startsWith('/admin/kanban') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
-                            {!isCollapsed && <span className="text-sm font-medium">Kanban</span>}
+                            {!isCollapsed && <span className="text-sm font-medium">Gemba</span>}
                         </Link>
 
                         <Link
@@ -161,8 +202,13 @@ export function SidebarContent({ profile }: { profile: Profile | null }) {
             </nav>
 
             <div className="p-4 mt-auto border-t border-border flex justify-center">
-                <div className={`flex ${isCollapsed ? 'flex-col items-center' : 'w-full items-center justify-between'} gap-3 group`}>
-                    <div className="flex items-center gap-3 overflow-hidden">
+                <div className={`flex ${isCollapsed ? 'flex-col items-center' : 'w-full items-center justify-between'} gap-3 group relative`}>
+
+                    {/* Profile Section - Click to Open Settings */}
+                    <div
+                        onClick={() => openProfileModal(profile)}
+                        className={`flex items-center gap-3 overflow-hidden cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-all border border-transparent hover:border-white/10 ${isCollapsed ? 'justify-center' : ''}`}
+                    >
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 border border-neutral-600 flex items-center justify-center text-white font-bold shadow-sm shrink-0 text-xs">
                             {initial}
                         </div>

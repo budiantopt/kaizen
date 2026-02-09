@@ -192,7 +192,7 @@ export function ProjectModal({ isOpen, onClose, projectToEdit }: ProjectModalPro
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Resource Link</label>
+                        <label className="block text-sm font-medium mb-1">Project Folder Link</label>
                         <input
                             name="resource_link"
                             type="url"

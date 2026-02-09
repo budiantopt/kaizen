@@ -7,7 +7,18 @@ import Link from 'next/link'
 import { Announcement } from '@/types'
 
 export function AnnouncementBanner({ announcement }: { announcement: Announcement | null }) {
-    const [isVisible, setIsVisible] = useState(true)
+    const [isVisible, setIsVisible] = useState(false)
+
+    useEffect(() => {
+        if (!announcement) return
+
+        // Check local storage / cookies
+        const dismissed = document.cookie.split('; ').find(row => row.startsWith(`focus_announcement_dismissed_${announcement.id}=`))
+
+        if (!dismissed) {
+            setIsVisible(true)
+        }
+    }, [announcement])
 
     if (!announcement || !isVisible) return null
 
@@ -43,7 +54,11 @@ export function AnnouncementBanner({ announcement }: { announcement: Announcemen
             </div>
 
             <button
-                onClick={() => setIsVisible(false)}
+                onClick={() => {
+                    // Set cookie for 24 hours
+                    document.cookie = `focus_announcement_dismissed_${announcement.id}=true; max-age=86400; path=/`
+                    setIsVisible(false)
+                }}
                 className="absolute right-4 p-1 rounded-full hover:bg-black/10 transition-colors"
                 aria-label="Dismiss"
             >

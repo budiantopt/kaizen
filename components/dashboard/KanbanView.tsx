@@ -27,7 +27,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Task } from '@/types'
 import { format } from 'date-fns'
 import { updateTaskStatus } from '@/app/actions/tasks'
-import { Info, Clock, RefreshCw } from 'lucide-react'
+import { Info, Clock, RefreshCw, ChevronsLeft } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import confetti from 'canvas-confetti'
 import { fetchGlobalTasks } from '@/app/actions/tasks'
@@ -35,8 +35,9 @@ import { fetchGlobalTasks } from '@/app/actions/tasks'
 // -- Configuration --
 const COLUMNS = [
     { id: 'todo', label: 'To Do', color: 'bg-neutral-500', description: 'Task created but not started' },
-    { id: 'on_track', label: 'On Track', color: 'bg-blue-500', description: 'Due date is > 2 days away' },
-    { id: 'at_risk', label: 'At Risk', color: 'bg-amber-500', description: 'Due within 48 hours' },
+    { id: 'in_progress', label: 'In Progress', color: 'bg-blue-600', description: 'Currently being worked on' },
+    { id: 'on_track', label: 'On Track', color: 'bg-blue-400', description: 'Due date is > 2 days away' },
+    { id: 'at_risk', label: 'At Risk', color: 'bg-amber-500', description: 'Due within 2 days' },
     { id: 'off_track', label: 'Off Track', color: 'bg-red-500', description: 'Past due date' },
     { id: 'on_hold', label: 'On Hold', color: 'bg-orange-500', description: 'Manually paused' },
     { id: 'complete', label: 'Complete', color: 'bg-green-600', description: 'Task finished' },
@@ -93,16 +94,15 @@ function TaskCard({ task, isOverlay, onEdit }: { task: Task, isOverlay?: boolean
                         className="w-1.5 h-1.5 rounded-full"
                         style={{ backgroundColor: task.project?.color_code || '#666' }}
                     ></span>
-                    <span className="truncate max-w-[80px]">{task.project?.name || 'No Project'}</span>
+                    <span className="truncate max-w-[140px]">{task.project?.name || 'No Project'}</span>
                 </span>
 
                 {(() => {
                     const p = task.priority?.toLowerCase() || 'low'
                     const color = p === 'high' ? 'bg-red-500 text-white' : p === 'medium' ? 'bg-yellow-500 text-black' : 'bg-neutral-500 text-white'
-                    if (p === 'low') return null
                     return (
-                        <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded ml-2 ${color}`} title={`${p} priority`}>
-                            {p}
+                        <span className={`text-[8px] font-bold uppercase w-4 h-4 flex items-center justify-center rounded ml-2 ${color}`} title={`${p} priority`}>
+                            {p.charAt(0).toUpperCase()}
                         </span>
                     )
                 })()}
@@ -161,6 +161,7 @@ function TaskCard({ task, isOverlay, onEdit }: { task: Task, isOverlay?: boolean
 }
 
 function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: string, title: string, tasks: Task[], color: string, description?: string, onEdit?: (task: Task) => void }) {
+    const [isCollapsed, setIsCollapsed] = useState(false)
     const { setNodeRef } = useSortable({
         id: id,
         data: {
@@ -169,10 +170,34 @@ function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: st
         },
     })
 
+    if (isCollapsed) {
+        return (
+            <div
+                ref={setNodeRef}
+                onClick={() => setIsCollapsed(false)}
+                className="flex flex-col h-full w-[44px] min-w-[44px] bg-muted/20 rounded-xl border border-border/50 items-center py-4 gap-4 cursor-pointer hover:bg-muted/40 transition-colors"
+                title={`Expand ${title}`}
+            >
+                <div className={`w-3 h-3 rounded-full ${color} shrink-0`}></div>
+                <div className="flex-1 flex items-center justify-center">
+                    <span
+                        className="text-sm font-semibold text-muted-foreground whitespace-nowrap tracking-tight"
+                        style={{ writingMode: 'vertical-lr', transform: 'rotate(180deg)' }}
+                    >
+                        {title}
+                    </span>
+                </div>
+                <span className="bg-background text-muted-foreground w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-bold border border-border shrink-0">
+                    {tasks.length}
+                </span>
+            </div>
+        )
+    }
+
     return (
-        <div className="flex flex-col h-full min-w-[280px] bg-muted/20 rounded-xl border border-border/50">
+        <div ref={setNodeRef} className="flex flex-col h-full min-w-[280px] bg-muted/20 rounded-xl border border-border/50 transition-all">
             {/* Header */}
-            <div className="p-4 flex items-center justify-between border-b border-border/50 bg-muted/30 rounded-t-xl sticky top-0 z-10 backdrop-blur-md">
+            <div className="p-4 flex items-center justify-between border-b border-border/50 bg-muted/30 rounded-t-xl sticky top-0 z-10 backdrop-blur-md group/header">
                 <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${color}`}></div>
                     <span className="font-semibold text-sm whitespace-nowrap">{title}</span>
@@ -181,19 +206,28 @@ function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: st
                     </span>
                 </div>
 
-                {description && (
-                    <div className="group relative ml-auto">
-                        <Info className="w-4 h-4 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" />
-                        <div className="absolute right-0 top-6 w-56 p-3 bg-popover text-popover-foreground text-xs rounded-lg shadow-xl border border-border/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-left leading-relaxed">
-                            <span className="font-semibold block mb-1 text-foreground">{title}</span>
-                            {description}
+                <div className="flex items-center gap-1.5 ml-auto">
+                    {description && (
+                        <div className="group relative">
+                            <Info className="w-4 h-4 text-muted-foreground/50 cursor-help hover:text-foreground transition-colors" />
+                            <div className="absolute right-0 top-6 w-56 p-3 bg-popover text-popover-foreground text-xs rounded-lg shadow-xl border border-border/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-left leading-relaxed">
+                                <span className="font-semibold block mb-1 text-foreground">{title}</span>
+                                {description}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                    <button
+                        onClick={() => setIsCollapsed(true)}
+                        className="text-muted-foreground/50 hover:text-foreground transition-colors p-0.5 rounded-md hover:bg-background/50"
+                        title="Collapse column"
+                    >
+                        <ChevronsLeft className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             {/* Droppable Area */}
-            <div ref={setNodeRef} className="p-3 space-y-3 flex-1 overflow-y-auto">
+            <div className="p-3 space-y-3 flex-1 overflow-y-auto">
                 <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                     {tasks.map(task => (
                         <TaskCard key={task.id} task={task} onEdit={onEdit} />
@@ -422,8 +456,14 @@ export function KanbanView({
             // 2. Server Update
             try {
                 await updateTaskStatus(activeId, newStatus)
+                addToast("Task updated", "success")
             } catch (err) {
                 console.error("Failed to update status", err)
+                addToast("Failed to update task", "error")
+                // Revert optimistic update
+                setTasks((prev) => prev.map(t =>
+                    t.id === activeId ? { ...t, status: activeTask.status } : t
+                ))
             }
         }
     }
@@ -474,7 +514,7 @@ export function KanbanView({
                             onEdit={onEdit}
                             tasks={(tasks || []).filter(t => {
                                 // Map legacy statuses
-                                if (col.id === 'on_track' && t.status === 'in_progress') return true
+                                // if (col.id === 'on_track' && t.status === 'in_progress') return true // REMOVED: Now has own column
                                 if (col.id === 'complete' && t.status === 'done') return true
                                 return t.status === col.id
                             })}

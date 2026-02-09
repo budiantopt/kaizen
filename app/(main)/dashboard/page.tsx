@@ -15,18 +15,19 @@ export default async function DashboardPage() {
         redirect('/login')
     }
 
-    // Fetch Tasks with Joined Projects AND Assignees
+    // Fetch Tasks with Projects (removed deep join causing errors)
     const { data: tasks, error: taskError } = await supabase
         .from('tasks')
         .select(`
             *,
-            project:projects(*),
-            assignees:task_assignees(
-                user_id,
-                profile:profiles(*)
-            )
+            project:projects(*)
         `)
         .order('end_date', { ascending: true })
+
+    // Fetch Task Assignees separately
+    const { data: taskAssignees } = await supabase
+        .from('task_assignees')
+        .select('task_id, user_id')
 
     // Fetch Projects (for the modal)
     const { data: projects } = await supabase
@@ -40,18 +41,25 @@ export default async function DashboardPage() {
         .select('*')
 
     if (taskError) {
-        console.error("Task Error", taskError)
+        console.error("Task Error", JSON.stringify(taskError, null, 2))
     }
 
     // Transformation for the frontend type
-    // The query returns assignees as [{ user_id: '...', profile: {...} }]
-    // We want to flatten it to Profile[] on the task object
     const formattedTasks = tasks
         ?.filter((t: any) => t.project?.status !== 'archived')
-        .map((t: any) => ({
-            ...t,
-            assignees: t.assignees?.map((a: any) => a.profile) || []
-        }))
+        .map((t: any) => {
+            // Find assignees for this task
+            const currentAssignees = taskAssignees?.filter((ta: any) => ta.task_id === t.id) || []
+            // Map to profiles
+            const assigneeProfiles = currentAssignees.map((ta: any) =>
+                profiles?.find((p: any) => p.id === ta.user_id)
+            ).filter(Boolean) // Remove nulls
+
+            return {
+                ...t,
+                assignees: assigneeProfiles
+            }
+        })
 
     const currentUserProfile = profiles?.find((p: any) => p.id === user?.id)
 

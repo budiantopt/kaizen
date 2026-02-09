@@ -63,6 +63,7 @@ export type KPI = {
     description: string
     target_metric: string | null
     created_at: string
+    is_completed?: boolean
 }
 
 export type Announcement = {
@@ -84,4 +85,5 @@ export type Resource = {
     description?: string | null
     created_at: string
     created_by?: string | null
+    creator?: Profile
 }
