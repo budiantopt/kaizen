@@ -1,11 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, CheckCircle2, TrendingUp, Users, Target, RefreshCw } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function GuidePage() {
     const [activeWaste, setActiveWaste] = useState('muda')
+    const [user, setUser] = useState<any>(null)
+
+    useEffect(() => {
+        const supabase = createClient()
+        supabase.auth.getUser().then(({ data }) => {
+            if (data?.user) {
+                setUser(data.user)
+            }
+        })
+    }, [])
 
     const wasteTypes = [
         {
@@ -46,12 +57,21 @@ export default function GuidePage() {
                         Kaizen
                     </div>
                     <nav className="flex items-center gap-6">
-                        <Link
-                            href="/login"
-                            className="bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-neutral-200 transition-colors"
-                        >
-                            Get Started
-                        </Link>
+                        {user ? (
+                            <Link
+                                href="/"
+                                className="bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-neutral-200 transition-colors"
+                            >
+                                Back to Dashboard
+                            </Link>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="bg-white text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-neutral-200 transition-colors"
+                            >
+                                Get Started
+                            </Link>
+                        )}
                     </nav>
                 </div>
             </header>
@@ -233,6 +253,54 @@ export default function GuidePage() {
                         </div>
                     </div>
 
+                    {/* EXP Points Section */}
+                    <div className="mt-24">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl font-bold mb-4">EXP Points Distribution</h2>
+                            <p className="text-neutral-400">Earn experience points by managing your tasks effectively. Compete with your team on the Performance Leaderboard.</p>
+                        </div>
+
+                        <div className="bg-neutral-900/50 border border-white/10 rounded-2xl overflow-hidden">
+                            <div className="grid grid-cols-2 p-6 border-b border-white/10 bg-black/50">
+                                <div className="font-bold text-white">Task Status</div>
+                                <div className="font-bold text-white text-right">Points Array</div>
+                            </div>
+                            <div className="grid grid-cols-2 p-6 border-b border-white/10 hover:bg-white/5 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                    </div>
+                                    <span className="font-medium text-white">Completed On Time</span>
+                                </div>
+                                <div className="text-right flex items-center justify-end">
+                                    <span className="font-bold text-green-500 text-xl">+2 EXP</span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 p-6 border-b border-white/10 hover:bg-white/5 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                                        <CheckCircle2 className="w-4 h-4 text-yellow-500" />
+                                    </div>
+                                    <span className="font-medium text-white">Completed Late</span>
+                                </div>
+                                <div className="text-right flex items-center justify-end">
+                                    <span className="font-bold text-yellow-500 text-xl">+1 EXP</span>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 p-6 hover:bg-white/5 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                                        <ArrowRight className="w-4 h-4 text-red-500 transform -rotate-45" />
+                                    </div>
+                                    <span className="font-medium text-white">Off Track (Overdue)</span>
+                                </div>
+                                <div className="text-right flex items-center justify-end">
+                                    <span className="font-bold text-red-500 text-xl">-1 EXP</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Quick Tour Section */}
                     <div className="mt-24">
                         <h2 className="text-3xl font-bold mb-10 text-center">Quick Tour</h2>
@@ -252,10 +320,17 @@ export default function GuidePage() {
                         </div>
                     </div>
                     <div className="mt-20 pt-10 border-t border-white/10 text-center">
-                        <Link href="/login" className="inline-flex items-center gap-2 text-white hover:text-neutral-300 transition-colors group text-lg font-medium">
-                            <span>Get Started</span>
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                        {user ? (
+                            <Link href="/" className="inline-flex items-center gap-2 text-white hover:text-neutral-300 transition-colors group text-lg font-medium">
+                                <span>Back to Dashboard</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        ) : (
+                            <Link href="/login" className="inline-flex items-center gap-2 text-white hover:text-neutral-300 transition-colors group text-lg font-medium">
+                                <span>Get Started</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        )}
                     </div>
                 </div>
             </main>

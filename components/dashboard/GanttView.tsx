@@ -36,6 +36,26 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
         })
     }, [tasks])
 
+    const groupedTasks = useMemo(() => {
+        const groups = new Map<number | string, { project: Task['project'] | null, tasks: Task[] }>()
+
+        sortedTasks.forEach(task => {
+            const projectId = task.project?.id || 'no-project'
+            if (!groups.has(projectId)) {
+                groups.set(projectId, { project: task.project, tasks: [] })
+            }
+            groups.get(projectId)!.tasks.push(task)
+        })
+
+        // Sort groups by project name
+        return Array.from(groups.values()).sort((a, b) => {
+            if (!a.project && b.project) return 1
+            if (a.project && !b.project) return -1
+            if (!a.project && !b.project) return 0
+            return (a.project?.name || '').localeCompare(b.project?.name || '')
+        })
+    }, [sortedTasks])
+
     // 2. Determine global timeline range
     const { startDate, endDate, totalUnits, dates } = useMemo(() => {
         if (sortedTasks.length === 0) return { startDate: new Date(), endDate: new Date(), totalUnits: 0, dates: [] }
@@ -132,110 +152,126 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
                     </div>
 
                     {/* Task Rows */}
-                    <div className="divide-y divide-border/30">
-                        {sortedTasks.map((task, index) => {
-                            const taskStart = normalizeDate(task.start_date)
-                            const taskEnd = normalizeDate(task.end_date)
-                            const color = task.project?.color_code || '#3b82f6'
-
-                            // -- LOGIC: Always calculate DURATION in Days --
-                            // This gives us the total "days block" size, regardless of view mode.
-                            const durationInDays = differenceInCalendarDays(taskEnd, taskStart) + 1
-
-                            // -- LOGIC: Calculate Left Offset and Width based on Unit Scale --
-                            let leftOffsetPx = 0
-                            let widthPx = 0
-
-                            if (viewMode === 'Day') {
-                                // Simple: 1 unit = 1 day
-                                const dayOffset = differenceInCalendarDays(taskStart, startDate)
-                                leftOffsetPx = dayOffset * columnWidth
-                                widthPx = durationInDays * columnWidth
-                            }
-                            else if (viewMode === 'Week') {
-                                // 1 unit = 1 week (7 days)
-                                // We need fractional weeks for precise positioning within the week cell
-                                const daysFromStart = differenceInCalendarDays(taskStart, startDate)
-                                const weeksOffset = daysFromStart / 7
-                                leftOffsetPx = weeksOffset * columnWidth
-                                // Width is simply proportional to days
-                                widthPx = (durationInDays / 7) * columnWidth
-                            }
-                            else { // Month
-                                // Month is tricky because days per month vary (28, 30, 31).
-                                // Approximation: Calculate pixel position of Key Dates relative to StartDate
-                                const getMonthPixelPos = (date: Date) => {
-                                    // Full months difference
-                                    const monthsDiff = differenceInMonths(date, startDate)
-                                    // Remaining days into the month
-                                    const startOfMonthDate = addMonths(startDate, monthsDiff)
-                                    const daysIntoMonth = differenceInCalendarDays(date, startOfMonthDate)
-                                    // Improve: get actual days in this specific month for precision
-                                    const daysInThisMonth = differenceInCalendarDays(addMonths(startOfMonthDate, 1), startOfMonthDate)
-
-                                    const fractionalMonth = daysIntoMonth / daysInThisMonth
-                                    return (monthsDiff + fractionalMonth) * columnWidth
-                                }
-
-                                leftOffsetPx = getMonthPixelPos(taskStart)
-                                // We calculate end position and subtract to get width, handles cross-month tasks nicely
-                                // Add 1 day to end date to encompass the full day block
-                                const taskEndInclusive = addDays(taskEnd, 1)
-                                const endPixelPos = getMonthPixelPos(taskEndInclusive)
-                                widthPx = endPixelPos - leftOffsetPx
-                            }
-
-                            // Improve: We can't use Simple Grid Columns anymore because we need fractional/pixel precision.
-                            // We will place the bar in the FIRST column (after label) and use marginLeft/width.
-                            // Grid Column 2 is where the timeline starts.
-
-                            return (
-                                <div key={task.id} style={gridStyle} className="group hover:bg-muted/10 transition-colors relative min-h-[50px]">
-
-                                    {/* Column 1: Task Label */}
-                                    <div className="p-3 border-r border-border sticky left-0 bg-background z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)] flex flex-col justify-center">
-                                        {task.project && (
-                                            <span
-                                                className="text-[10px] uppercase font-bold tracking-wider mb-0.5"
-                                                style={{ color: task.project.color_code }}
-                                            >
-                                                {task.project.name}
-                                            </span>
+                    <div className="flex flex-col">
+                        {groupedTasks.map((group) => (
+                            <div key={group.project?.id || 'no-project'} className="contents">
+                                {/* Project Header Row */}
+                                <div style={gridStyle} className="bg-muted/30 border-b border-border min-h-[40px] sticky left-0">
+                                    <div className="p-3 border-r border-border font-bold sticky text-sm left-0 bg-muted/80 backdrop-blur-sm z-20 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)] flex items-center gap-2">
+                                        {group.project ? (
+                                            <>
+                                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.project.color_code || '#3b82f6' }} />
+                                                <span className="truncate">{group.project.name}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-muted-foreground italic">No Project</span>
                                         )}
-                                        <span className="text-sm font-medium truncate" title={task.title}>{task.title}</span>
                                     </div>
-
-                                    {/* Grid Lines Background */}
+                                    {/* Empty grid for the timeline track on the header */}
                                     {dates.map((_, i) => (
                                         <div key={i} className="border-r border-border/20 h-full w-full" style={{ gridColumn: i + 2, gridRow: 1 }}></div>
                                     ))}
-
-                                    {/* The Gantt Bar */}
-                                    {/* We place it covering the entire timeline track, then position absolutely inside */}
-                                    <div
-                                        className="relative z-0 h-full py-3 pointer-events-none"
-                                        style={{
-                                            gridColumn: `2 / -1`, // Span entire timeline area
-                                            gridRow: 1
-                                        }}
-                                    >
-                                        <div
-                                            className="h-6 rounded-md shadow-sm border border-white/20 flex items-center px-2 text-[10px] text-white font-medium whitespace-nowrap absolute"
-                                            style={{
-                                                backgroundColor: color,
-                                                left: `${leftOffsetPx}px`,
-                                                width: `${widthPx}px`
-                                            }}
-                                        >
-                                            <span className="drop-shadow-md sticky left-2">
-                                                {durationInDays} days
-                                            </span>
-                                        </div>
-                                    </div>
-
                                 </div>
-                            )
-                        })}
+
+                                <div className="divide-y divide-border/30">
+                                    {group.tasks.map((task, index) => {
+                                        const taskStart = normalizeDate(task.start_date)
+                                        const taskEnd = normalizeDate(task.end_date)
+                                        const color = task.project?.color_code || '#3b82f6'
+
+                                        // -- LOGIC: Always calculate DURATION in Days --
+                                        // This gives us the total "days block" size, regardless of view mode.
+                                        const durationInDays = differenceInCalendarDays(taskEnd, taskStart) + 1
+
+                                        // -- LOGIC: Calculate Left Offset and Width based on Unit Scale --
+                                        let leftOffsetPx = 0
+                                        let widthPx = 0
+
+                                        if (viewMode === 'Day') {
+                                            // Simple: 1 unit = 1 day
+                                            const dayOffset = differenceInCalendarDays(taskStart, startDate)
+                                            leftOffsetPx = dayOffset * columnWidth
+                                            widthPx = durationInDays * columnWidth
+                                        }
+                                        else if (viewMode === 'Week') {
+                                            // 1 unit = 1 week (7 days)
+                                            // We need fractional weeks for precise positioning within the week cell
+                                            const daysFromStart = differenceInCalendarDays(taskStart, startDate)
+                                            const weeksOffset = daysFromStart / 7
+                                            leftOffsetPx = weeksOffset * columnWidth
+                                            // Width is simply proportional to days
+                                            widthPx = (durationInDays / 7) * columnWidth
+                                        }
+                                        else { // Month
+                                            // Month is tricky because days per month vary (28, 30, 31).
+                                            // Approximation: Calculate pixel position of Key Dates relative to StartDate
+                                            const getMonthPixelPos = (date: Date) => {
+                                                // Full months difference
+                                                const monthsDiff = differenceInMonths(date, startDate)
+                                                // Remaining days into the month
+                                                const startOfMonthDate = addMonths(startDate, monthsDiff)
+                                                const daysIntoMonth = differenceInCalendarDays(date, startOfMonthDate)
+                                                // Improve: get actual days in this specific month for precision
+                                                const daysInThisMonth = differenceInCalendarDays(addMonths(startOfMonthDate, 1), startOfMonthDate)
+
+                                                const fractionalMonth = daysIntoMonth / daysInThisMonth
+                                                return (monthsDiff + fractionalMonth) * columnWidth
+                                            }
+
+                                            leftOffsetPx = getMonthPixelPos(taskStart)
+                                            // We calculate end position and subtract to get width, handles cross-month tasks nicely
+                                            // Add 1 day to end date to encompass the full day block
+                                            const taskEndInclusive = addDays(taskEnd, 1)
+                                            const endPixelPos = getMonthPixelPos(taskEndInclusive)
+                                            widthPx = endPixelPos - leftOffsetPx
+                                        }
+
+                                        // Improve: We can't use Simple Grid Columns anymore because we need fractional/pixel precision.
+                                        // We will place the bar in the FIRST column (after label) and use marginLeft/width.
+                                        // Grid Column 2 is where the timeline starts.
+
+                                        return (
+                                            <div key={task.id} style={gridStyle} className="group hover:bg-muted/10 transition-colors relative min-h-[50px]">
+
+                                                {/* Column 1: Task Label */}
+                                                <div className="p-3 border-r border-border sticky left-0 bg-background z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)] flex flex-col justify-center pl-8">
+                                                    <span className="text-sm font-medium text-muted-foreground truncate" title={task.title}>{task.title}</span>
+                                                </div>
+
+                                                {/* Grid Lines Background */}
+                                                {dates.map((_, i) => (
+                                                    <div key={i} className="border-r border-border/20 h-full w-full" style={{ gridColumn: i + 2, gridRow: 1 }}></div>
+                                                ))}
+
+                                                {/* The Gantt Bar */}
+                                                {/* We place it covering the entire timeline track, then position absolutely inside */}
+                                                <div
+                                                    className="relative z-0 h-full py-3 pointer-events-none"
+                                                    style={{
+                                                        gridColumn: `2 / -1`, // Span entire timeline area
+                                                        gridRow: 1
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="h-6 rounded-md shadow-sm border border-white/20 flex items-center px-2 text-[10px] text-white font-medium whitespace-nowrap absolute"
+                                                        style={{
+                                                            backgroundColor: color,
+                                                            left: `${leftOffsetPx}px`,
+                                                            width: `${widthPx}px`
+                                                        }}
+                                                    >
+                                                        <span className="drop-shadow-md sticky left-2">
+                                                            {durationInDays} days
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

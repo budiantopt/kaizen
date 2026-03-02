@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutGrid, CheckSquare, Gauge, Layers, Circle, ShieldAlert, LogOut, Megaphone, Users, Library } from 'lucide-react'
+import { LayoutGrid, CheckSquare, Gauge, Layers, Circle, ShieldAlert, LogOut, Megaphone, Users, Library, BookOpen } from 'lucide-react'
 import { Profile } from '@/types'
 import { signOut } from '@/app/actions/auth'
 import { getInitials } from '@/lib/utils'
@@ -16,6 +16,7 @@ const navigation = [
     { name: 'Projects', href: '/projects', icon: Layers },
     { name: 'Performance', href: '/performance', icon: Gauge },
     { name: 'Resources', href: '/resources', icon: Library },
+    { name: 'Guide', href: '/guide', icon: BookOpen },
 ]
 
 function WorkClock() {

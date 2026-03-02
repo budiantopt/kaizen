@@ -78,7 +78,7 @@ export async function upsertProject(prevState: any, formData: FormData) {
     // We will use standard client first. If it fails and user is admin, we retry with admin?
     // No, better to just use admin client if isAdmin.
 
-    let supabaseAction = supabase
+    const supabaseAction = supabase
     if (isAdmin) {
         // We need to import createAdminClient. 
         // Since I can't easily add import at top in this replace block without messing up,
