@@ -51,9 +51,9 @@ To do this quickly, simply create a `vercel.json` file in the root of your proje
   "crons": [
     {
       "path": "/api/cron/daily-summary",
-      "schedule": "0 8 * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }
 ```
-*Note: The cron expression `0 8 * * *` triggers the job every day at 8:00 AM UTC. Adjust as needed.*
+*Note: The cron expression `0 2 * * *` triggers the job every day at 02:00 AM UTC (09:00 AM WIB Jakarta Time).*
