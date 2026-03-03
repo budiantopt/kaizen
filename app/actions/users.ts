@@ -81,7 +81,7 @@ export async function createUser(prevState: any, formData: FormData) {
         if (process.env.RESEND_API_KEY) {
             const resend = new Resend(process.env.RESEND_API_KEY)
             await resend.emails.send({
-                from: 'Kaizen Admin <onboarding@resend.dev>',
+                from: 'Kaizen Admin <admin@kaizenapp.space>',
                 to: email,
                 subject: 'Welcome to Kaizen - Your Account',
                 html: `
@@ -184,7 +184,7 @@ export async function resetUserPassword(userId: string, email: string, name: str
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     const { error: emailError } = await resend.emails.send({
-        from: 'Kaizen Admin <onboarding@resend.dev>',
+        from: 'Kaizen Admin <admin@kaizenapp.space>',
         to: email,
         subject: 'Your Kaizen Account Credentials',
         html: `
