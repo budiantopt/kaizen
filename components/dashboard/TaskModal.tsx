@@ -256,42 +256,48 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                             ))}
 
                             <div className="flex flex-wrap gap-2 mb-3">
-                                {selectedAssignees.map(id => {
-                                    const profile = profiles.find(p => p.id === id)
-                                    return (
-                                        <div key={id} className="inline-flex items-center gap-1 bg-white text-black pl-1 pr-2 py-0.5 rounded-full text-xs font-medium">
-                                            <div className="w-5 h-5 rounded-full bg-neutral-300 flex items-center justify-center text-[10px] overflow-hidden">
-                                                {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : getInitials(profile?.full_name)}
+                                {selectedAssignees
+                                .map(id => profiles.find(p => p.id === id))
+                                .sort((a, b) => (a?.full_name || a?.email || '').localeCompare(b?.full_name || b?.email || ''))
+                                .map(profile => {
+                                        if (!profile) return null;
+                                        const id = profile.id;
+                                        return (
+                                            <div key={id} className="inline-flex items-center gap-1 bg-white text-black pl-1 pr-2 py-0.5 rounded-full text-xs font-medium">
+                                                <div className="w-5 h-5 rounded-full bg-neutral-300 flex items-center justify-center text-[10px] overflow-hidden">
+                                                    {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : getInitials(profile?.full_name)}
+                                                </div>
+                                                {profile?.full_name || 'Unknown'}
+                                                <button type="button" onClick={() => toggleAssignee(id)} className="ml-1 text-neutral-500 hover:text-black">
+                                                    <X className="w-3 h-3" />
+                                                </button>
                                             </div>
-                                            {profile?.full_name || 'Unknown'}
-                                            <button type="button" onClick={() => toggleAssignee(id)} className="ml-1 text-neutral-500 hover:text-black">
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    )
-                                })}
+                                        )
+                                    })}
                             </div>
 
                             <div className="border border-border rounded-lg p-2 max-h-[150px] overflow-y-auto bg-secondary/30">
-                                {profiles.map(profile => {
-                                    const isSelected = selectedAssignees.includes(profile.id)
-                                    return (
-                                        <button
-                                            key={profile.id}
-                                            type="button"
-                                            onClick={() => toggleAssignee(profile.id)}
-                                            className={`flex items-center gap-3 w-full p-2 rounded-md hover:bg-muted transition-colors ${isSelected ? 'opacity-50' : ''}`}
-                                        >
-                                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 border border-neutral-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                                                {getInitials(profile.full_name)}
-                                            </div>
-                                            <div className="text-left text-sm truncate">
-                                                {profile.full_name || profile.email}
-                                            </div>
-                                            {isSelected && <div className="ml-auto text-green-500 text-xs font-bold">Selected</div>}
-                                        </button>
-                                    )
-                                })}
+                                {[...profiles]
+                                .sort((a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || ''))
+                                .map(profile => {
+                                        const isSelected = selectedAssignees.includes(profile.id)
+                                        return (
+                                            <button
+                                                key={profile.id}
+                                                type="button"
+                                                onClick={() => toggleAssignee(profile.id)}
+                                                className={`flex items-center gap-3 w-full p-2 rounded-md hover:bg-muted transition-colors ${isSelected ? 'opacity-50' : ''}`}
+                                            >
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 border border-neutral-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                                                    {getInitials(profile.full_name)}
+                                                </div>
+                                                <div className="text-left text-sm truncate">
+                                                    {profile.full_name || profile.email}
+                                                </div>
+                                                {isSelected && <div className="ml-auto text-green-500 text-xs font-bold">Selected</div>}
+                                            </button>
+                                        )
+                                    })}
                             </div>
                         </div>
 

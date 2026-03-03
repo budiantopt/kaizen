@@ -62,7 +62,7 @@ function WorkClock() {
 
 
 import { createClient } from '@/lib/supabase/client'
-import { ChevronRight, ChevronLeft, Monitor, Key } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Monitor, Key, Activity } from 'lucide-react'
 import { useProfileModal } from '@/components/providers/ProfileModalProvider'
 
 // ... existing WorkClock (no changes needed) ...
@@ -164,15 +164,27 @@ export function SidebarContent({ profile }: { profile: Profile | null }) {
                         {!isCollapsed && <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Admin</p>}
 
                         <Link
-                            href="/admin/kanban"
-                            title={isCollapsed ? "Gemba" : ''}
-                            className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/kanban')
+                            href="/admin/workload"
+                            title={isCollapsed ? "Workload" : ''}
+                            className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/workload')
                                 ? 'bg-foreground text-background shadow-md'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                         >
-                            <Monitor className={`w-5 h-5 ${pathname.startsWith('/admin/kanban') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
-                            {!isCollapsed && <span className="text-sm font-medium">Gemba</span>}
+                            <Activity className={`w-5 h-5 ${pathname.startsWith('/admin/workload') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
+                            {!isCollapsed && <span className="text-sm font-medium">Workload</span>}
+                        </Link>
+
+                        <Link
+                            href="/admin/users"
+                            title={isCollapsed ? "Users" : ''}
+                            className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/users')
+                                ? 'bg-foreground text-background shadow-md'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                }`}
+                        >
+                            <Users className={`w-5 h-5 ${pathname.startsWith('/admin/users') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
+                            {!isCollapsed && <span className="text-sm font-medium">Users</span>}
                         </Link>
 
                         <Link
@@ -188,15 +200,15 @@ export function SidebarContent({ profile }: { profile: Profile | null }) {
                         </Link>
 
                         <Link
-                            href="/admin/users"
-                            title={isCollapsed ? "Users" : ''}
-                            className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/users')
+                            href="/admin/kanban"
+                            title={isCollapsed ? "Gemba" : ''}
+                            className={`group flex items-center ${isCollapsed ? 'justify-center w-10 h-10' : 'gap-3 px-3 py-2'} rounded-md transition-all shrink-0 ${pathname.startsWith('/admin/kanban')
                                 ? 'bg-foreground text-background shadow-md'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                 }`}
                         >
-                            <Users className={`w-5 h-5 ${pathname.startsWith('/admin/users') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
-                            {!isCollapsed && <span className="text-sm font-medium">Users</span>}
+                            <Monitor className={`w-5 h-5 ${pathname.startsWith('/admin/kanban') ? 'text-background' : 'text-muted-foreground group-hover:text-foreground'} ${isCollapsed ? '' : 'w-4 h-4'}`} />
+                            {!isCollapsed && <span className="text-sm font-medium">Gemba</span>}
                         </Link>
                     </div>
                 )}
