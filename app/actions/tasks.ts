@@ -15,7 +15,8 @@ const taskSchema = z.object({
     start_date: z.string(),
     end_date: z.string(),
     assignee_ids: z.array(z.string()).optional(),
-    remarks: z.string().optional()
+    remarks: z.string().optional(),
+    evidence_link: z.string().optional()
 })
 
 // NEW: Fetch all tasks for admin kanban (live polling)
@@ -66,7 +67,8 @@ export async function upsertTask(prevState: any, formData: FormData) {
         start_date: formData.get('start_date'),
         end_date: formData.get('end_date'),
         assignee_ids: assigneeIds,
-        remarks: formData.get('remarks')
+        remarks: formData.get('remarks'),
+        evidence_link: formData.get('evidence_link')
     }
 
     const validatedFields = taskSchema.safeParse(rawData)
@@ -77,7 +79,7 @@ export async function upsertTask(prevState: any, formData: FormData) {
         }
     }
 
-    const { id, title, project_id, status, priority, start_date, end_date, remarks } = validatedFields.data
+    const { id, title, project_id, status, priority, start_date, end_date, remarks, evidence_link } = validatedFields.data
 
     let taskId = id
 
@@ -110,6 +112,7 @@ export async function upsertTask(prevState: any, formData: FormData) {
                 start_date,
                 end_date,
                 remarks,
+                evidence_link: evidence_link || null,
                 updated_at: new Date().toISOString()
             })
             .eq('id', taskId)
@@ -128,6 +131,7 @@ export async function upsertTask(prevState: any, formData: FormData) {
                 start_date,
                 end_date,
                 remarks,
+                evidence_link: evidence_link || null,
                 assignee_id: assigneeIds.length > 0 ? assigneeIds[0] : user.id,
                 completed_at: (status === 'done' || status === 'complete') ? new Date().toISOString() : null
             })

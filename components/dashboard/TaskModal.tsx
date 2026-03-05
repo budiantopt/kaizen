@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useActionState, useRef } from 'react'
-import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown } from 'lucide-react'
+import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink } from 'lucide-react'
 import { upsertTask } from '@/app/actions/tasks'
 import { Project, Profile, Task } from '@/types'
 import { getInitials } from '@/lib/utils'
@@ -228,6 +228,24 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Attachment / Evidence Link */}
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase text-muted-foreground mb-1.5 flex items-center gap-2">
+                                        <ExternalLink className="w-3 h-3" /> Attachment Link
+                                    </label>
+                                    <div className="mt-5">
+                                        <input
+                                            name="evidence_link"
+                                            type="url"
+                                            defaultValue={taskToEdit?.evidence_link || ''}
+                                            className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Remarks Field */}
@@ -257,9 +275,9 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
 
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {selectedAssignees
-                                .map(id => profiles.find(p => p.id === id))
-                                .sort((a, b) => (a?.full_name || a?.email || '').localeCompare(b?.full_name || b?.email || ''))
-                                .map(profile => {
+                                    .map(id => profiles.find(p => p.id === id))
+                                    .sort((a, b) => (a?.full_name || a?.email || '').localeCompare(b?.full_name || b?.email || ''))
+                                    .map(profile => {
                                         if (!profile) return null;
                                         const id = profile.id;
                                         return (
@@ -278,8 +296,8 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
 
                             <div className="border border-border rounded-lg p-2 max-h-[150px] overflow-y-auto bg-secondary/30">
                                 {[...profiles]
-                                .sort((a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || ''))
-                                .map(profile => {
+                                    .sort((a, b) => (a.full_name || a.email || '').localeCompare(b.full_name || b.email || ''))
+                                    .map(profile => {
                                         const isSelected = selectedAssignees.includes(profile.id)
                                         return (
                                             <button

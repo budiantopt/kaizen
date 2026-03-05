@@ -17,6 +17,7 @@ import {
     parseISO,
     isValid
 } from 'date-fns'
+import { ExternalLink } from 'lucide-react'
 
 type ViewMode = 'Day' | 'Week' | 'Month'
 
@@ -234,8 +235,20 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
                                             <div key={task.id} style={gridStyle} className="group hover:bg-muted/10 transition-colors relative min-h-[50px]">
 
                                                 {/* Column 1: Task Label */}
-                                                <div className="p-3 border-r border-border sticky left-0 bg-background z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)] flex flex-col justify-center pl-8">
+                                                <div className="p-3 border-r border-border sticky left-0 bg-background z-10 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)] flex items-center justify-between pl-8 gap-2">
                                                     <span className="text-sm font-medium text-muted-foreground truncate" title={task.title}>{task.title}</span>
+                                                    {task.evidence_link && (
+                                                        <a
+                                                            href={task.evidence_link}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="text-muted-foreground hover:text-blue-500 transition-colors shrink-0"
+                                                            title="Open Attachment"
+                                                        >
+                                                            <ExternalLink className="w-3.5 h-3.5" />
+                                                        </a>
+                                                    )}
                                                 </div>
 
                                                 {/* Grid Lines Background */}

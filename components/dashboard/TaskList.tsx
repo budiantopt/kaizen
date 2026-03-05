@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Check } from 'lucide-react'
 import { toggleTaskStatus } from '@/app/actions/tasks'
 import { getInitials } from '@/lib/utils'
 import confetti from 'canvas-confetti'
+import { ExternalLink } from 'lucide-react'
 
 type SortField = 'title' | 'project' | 'status' | 'end_date' | 'assignee' | 'priority'
 type SortDirection = 'asc' | 'desc'
@@ -116,9 +117,23 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                             >
                                 {(task.status === 'done' || task.status === 'complete') && <Check className="w-3 h-3" />}
                             </button>
-                            <span title={task.title} className={`font-medium truncate ${task.status === 'done' || task.status === 'complete' ? 'text-muted-foreground/50 line-through' : 'text-foreground'}`}>
-                                {task.title}
-                            </span>
+                            <div className="flex items-center gap-2 truncate">
+                                <span title={task.title} className={`font-medium truncate ${task.status === 'done' || task.status === 'complete' ? 'text-muted-foreground/50 line-through' : 'text-foreground'}`}>
+                                    {task.title}
+                                </span>
+                                {task.evidence_link && (
+                                    <a
+                                        href={task.evidence_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-muted-foreground hover:text-blue-500 shrink-0"
+                                        title="Open Attachment"
+                                    >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                )}
+                            </div>
                         </div>
 
                         <div className="w-[25%]">

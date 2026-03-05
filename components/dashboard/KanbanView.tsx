@@ -31,6 +31,7 @@ import { Info, Clock, RefreshCw, ChevronsLeft } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 import confetti from 'canvas-confetti'
 import { fetchGlobalTasks } from '@/app/actions/tasks'
+import { ExternalLink } from 'lucide-react'
 
 // -- Configuration --
 const COLUMNS = [
@@ -107,9 +108,23 @@ function TaskCard({ task, isOverlay, onEdit }: { task: Task, isOverlay?: boolean
                     )
                 })()}
             </div>
-            <h4 className={`text-sm font-medium bg-transparent ${task.status === 'complete' || task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                {task.title}
-            </h4>
+            <div className="flex items-center gap-2">
+                <h4 className={`text-sm font-medium bg-transparent ${task.status === 'complete' || task.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                    {task.title}
+                </h4>
+                {task.evidence_link && (
+                    <a
+                        href={task.evidence_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-muted-foreground hover:text-blue-500 transition-colors z-20 shrink-0"
+                        title="Open Attachment"
+                    >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                )}
+            </div>
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
