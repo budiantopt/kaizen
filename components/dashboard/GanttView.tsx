@@ -154,7 +154,7 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
                     {/* Today Indicator Line */}
                     {todayOffsetPx !== null && (
                         <div
-                            className="absolute top-0 bottom-0 z-40 border-l-2 border-blue-500/50 pointer-events-none"
+                            className="absolute top-0 bottom-0 z-0 border-l-2 border-blue-500/50 pointer-events-none"
                             style={{ left: `${todayOffsetPx}px` }}
                         />
                     )}
@@ -168,8 +168,9 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
                             <div key={i} className={`p-2 text-center border-r border-border/30 flex flex-col items-center justify-center text-xs text-muted-foreground`}>
                                 {viewMode === 'Day' && (
                                     <>
-                                        <span className="uppercase text-[10px]">{format(date, 'MMM')} {format(date, 'EEE')}</span>
+                                        <span className="uppercase text-[10px]">{format(date, 'EEE')}</span>
                                         <span className="font-bold text-foreground">{format(date, 'd')}</span>
+                                        <span className="uppercase text-[10px]">{format(date, 'MMM')}</span>
                                     </>
                                 )}
                                 {viewMode === 'Week' && (
