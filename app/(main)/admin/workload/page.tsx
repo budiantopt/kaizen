@@ -108,7 +108,7 @@ export default async function WorkloadOverviewPage(props: { searchParams?: Promi
     })
 
     filteredByDateTasks.forEach((task: any) => {
-        const isCompleted = task.status === 'done'
+        const isCompleted = task.status === 'done' || task.status === 'complete'
         const isOverdue = !isCompleted && new Date(task.end_date) < now
         const isIncomplete = !isCompleted
 
