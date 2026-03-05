@@ -100,6 +100,31 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
         gridTemplateColumns: `250px repeat(${totalUnits}, ${columnWidth}px)`,
     }
 
+    const todayOffsetPx = useMemo(() => {
+        const today = startOfDay(new Date())
+        if (today < startDate || today > endDate) return null
+
+        let leftOffsetPx = 0
+        if (viewMode === 'Day') {
+            const dayOffset = differenceInCalendarDays(today, startDate)
+            leftOffsetPx = dayOffset * columnWidth + (columnWidth / 2)
+        }
+        else if (viewMode === 'Week') {
+            const daysFromStart = differenceInCalendarDays(today, startDate)
+            leftOffsetPx = (daysFromStart / 7) * columnWidth
+        }
+        else {
+            const monthsDiff = differenceInMonths(today, startDate)
+            const startOfMonthDate = addMonths(startDate, monthsDiff)
+            const daysIntoMonth = differenceInCalendarDays(today, startOfMonthDate)
+            const daysInThisMonth = differenceInCalendarDays(addMonths(startOfMonthDate, 1), startOfMonthDate)
+            const fractionalMonth = daysIntoMonth / daysInThisMonth
+            leftOffsetPx = (monthsDiff + fractionalMonth) * columnWidth
+        }
+
+        return 250 + leftOffsetPx
+    }, [startDate, endDate, viewMode, columnWidth])
+
     if (tasks.length === 0) return <div className="p-8 text-center text-muted-foreground">No tasks to display.</div>
 
     return (
@@ -125,7 +150,15 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
 
             {/* Scrollable Chart Area */}
             <div className="overflow-auto flex-1 relative">
-                <div className="min-w-fit">
+                <div className="min-w-fit relative">
+                    {/* Today Indicator Line */}
+                    {todayOffsetPx !== null && (
+                        <div
+                            className="absolute top-0 bottom-0 z-40 border-l-2 border-blue-500/50 pointer-events-none"
+                            style={{ left: `${todayOffsetPx}px` }}
+                        />
+                    )}
+
                     {/* Header Row */}
                     <div style={gridStyle} className="border-b border-border bg-muted/40 sticky top-0 z-20">
                         <div className="p-3 text-sm font-bold text-muted-foreground border-r border-border sticky left-0 bg-background/95 backdrop-blur-sm z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]">
@@ -135,7 +168,7 @@ export function GanttView({ tasks }: { tasks: Task[] }) {
                             <div key={i} className={`p-2 text-center border-r border-border/30 flex flex-col items-center justify-center text-xs text-muted-foreground`}>
                                 {viewMode === 'Day' && (
                                     <>
-                                        <span className="uppercase text-[10px]">{format(date, 'EEE')}</span>
+                                        <span className="uppercase text-[10px]">{format(date, 'MMM')} {format(date, 'EEE')}</span>
                                         <span className="font-bold text-foreground">{format(date, 'd')}</span>
                                     </>
                                 )}

@@ -166,7 +166,9 @@ export default function DashboardClient({
                     <p className="text-muted-foreground mt-2">
                         {format(new Date(), 'MMM d, yyyy')} • {title === 'Team Tasks'
                             ? `Team has ${pendingCount} pending tasks from various projects.`
-                            : `You have ${pendingCount} pending tasks.`
+                            : initialProjectId
+                                ? `This project has ${pendingCount} pending tasks.`
+                                : `You have ${pendingCount} pending tasks.`
                         }
                     </p>
                 </div>
