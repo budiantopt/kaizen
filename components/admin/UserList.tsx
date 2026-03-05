@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useEffect, useTransition } from 'react'
-import { updateUserRole, resetUserPassword, createUser } from '@/app/actions/users'
+import { updateUserRole, resetUserPassword, createUser, deleteUser } from '@/app/actions/users'
 import { Profile } from '@/types'
 
 const initialState = {
@@ -208,7 +208,7 @@ function ChangePasswordForm({ profile, onCancel }: { profile: Profile, onCancel:
 
 import { createKpi, deleteKpi, toggleKpiStatus } from '@/app/actions/kpis'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Trash2, Key, Target } from 'lucide-react'
+import { Check, Trash2, Key, Target, UserX } from 'lucide-react'
 import { KPI } from '@/types'
 
 function GoalsManager({ userId }: { userId: string }) {
@@ -342,6 +342,17 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
         }
     }, [state.success, onCancel])
 
+    const handleDeleteUser = async () => {
+        if (!confirm(`Are you absolutely sure you want to permanently delete the user ${profile.full_name || profile.email}? This cannot be undone.`)) return
+
+        const result = await deleteUser(profile.id)
+        if (!result.success) {
+            alert(result.message)
+        } else {
+            // It will revalidate and refresh the list
+        }
+    }
+
     if (isEditing) {
         return (
             <form action={formAction} className="p-4 flex items-center gap-4 bg-secondary/20">
@@ -414,6 +425,9 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
                 </button>
                 <button onClick={onEdit} className="text-xs border px-3 py-1 rounded hover:bg-secondary transition-colors">
                     Edit
+                </button>
+                <button onClick={handleDeleteUser} className="text-xs border border-red-500/30 text-red-500 hover:bg-red-500/10 px-2 py-1 rounded transition-colors" title="Delete User">
+                    <UserX className="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>

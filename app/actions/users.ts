@@ -239,3 +239,39 @@ export async function updateUserPassword(prevState: any, formData: FormData) {
 
     return { message: 'Password updated successfully', success: true }
 }
+
+export async function deleteUser(userId: string) {
+    const supabase = await createClient()
+
+    // Auth Check
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { message: 'Unauthorized', success: false }
+
+    // Admin Check
+    const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (adminProfile?.role !== 'admin') {
+        return { message: 'Unauthorized', success: false }
+    }
+
+    if (userId === user.id) {
+        return { message: 'You cannot delete yourself.', success: false }
+    }
+
+    let supabaseAdmin
+    try {
+        supabaseAdmin = createAdminClient()
+    } catch (e: any) {
+        return { message: "Server configuration error: " + e.message, success: false }
+    }
+
+    // Delete user from auth.users (This should cascade to public.profiles if foreign key is set up with ON DELETE CASCADE. If not, we might need to delete profile first)
+    // To be safe, let's delete the profile first.
+    const { error: profileError } = await supabaseAdmin.from('profiles').delete().eq('id', userId)
+    if (profileError) console.error("Profile delete error (might be expected if cascade handles it):", profileError)
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    if (authError) return { message: 'Failed to delete user: ' + authError.message, success: false }
+
+    revalidatePath('/admin')
+    return { message: 'User deleted successfully', success: true }
+}
