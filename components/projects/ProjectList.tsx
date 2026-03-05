@@ -73,7 +73,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                 <div className={`text-right text-xs p-1 mb-1 font-medium ${isSameDay(date, new Date()) ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center ml-auto shadow-sm' : ''}`}>
                                     {format(date, 'd')}
                                 </div>
-                                <div className="space-y-1 overflow-y-auto max-h-[85px] scrollbar-hide">
+                                <div className="space-y-1 overflow-y-auto flex-1 scrollbar-hide">
                                     {activeProjectsOnDate.slice(0, 2).map(p => (
                                         <Link href={`/projects/${p.id}`} key={p.id} className="block">
                                             <div
@@ -85,17 +85,17 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                             </div>
                                         </Link>
                                     ))}
-                                    {activeProjectsOnDate.length > 2 && (
-                                        <div className="relative group/tooltip">
-                                            <div className="text-[9px] text-muted-foreground pl-1 cursor-help hover:text-foreground transition-colors">
-                                                + {activeProjectsOnDate.length - 2} more...
-                                            </div>
-                                            <div className="absolute bottom-full left-0 mb-2 hidden group-hover/tooltip:block z-50 w-max max-w-[150px] p-2 bg-popover text-popover-foreground text-[10px] rounded-md border border-border shadow-md whitespace-pre-wrap leading-tight">
-                                                {activeProjectsOnDate.slice(2).map(p => p.name).join('\n')}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
+                                {activeProjectsOnDate.length > 2 && (
+                                    <div className="relative group/tooltip mt-auto">
+                                        <div className="text-[9px] text-muted-foreground pl-1 cursor-help hover:text-foreground transition-colors">
+                                            + {activeProjectsOnDate.length - 2} more...
+                                        </div>
+                                        <div className="absolute bottom-full left-0 mb-1 hidden group-hover/tooltip:block z-[999] w-max max-w-[150px] p-2 bg-popover text-popover-foreground text-[10px] rounded-md border border-border shadow-xl whitespace-pre-wrap leading-tight">
+                                            {activeProjectsOnDate.slice(2).map(p => p.name).join('\n')}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )
                     })}
