@@ -17,7 +17,7 @@ export type Project = {
     icon?: string | null
     start_date?: string | null
     end_date?: string | null
-    status: 'active' | 'archived'
+    status: 'active' | 'archived' | 'pinned'
     created_by: string | null
     created_at?: string
     creator?: Profile

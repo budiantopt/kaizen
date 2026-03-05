@@ -135,7 +135,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                 <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {activeProjectsList.length > 0 ? activeProjectsList.map((project) => {
-                            const IconComponent = ICON_MAP[project.icon || 'folder'] || Folder
+                            const IconComponent = project.status === 'pinned' ? Folder : (ICON_MAP[project.icon || 'folder'] || Folder)
                             const ownerName = project.creator?.full_name || 'System'
 
                             return (
@@ -215,7 +215,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                             <h3 className="text-muted-foreground text-sm font-medium mb-4 uppercase tracking-wider mt-8 border-t border-border pt-8">Archived Projects</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {archivedProjectsList.map((project) => {
-                                    const IconComponent = ICON_MAP[project.icon || 'folder'] || Folder
+                                    const IconComponent = project.status === 'pinned' ? Folder : (ICON_MAP[project.icon || 'folder'] || Folder)
                                     const ownerName = project.creator?.full_name || 'System'
 
                                     return (
@@ -297,7 +297,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                         <div className="bg-card border border-border rounded-xl overflow-hidden">
                             <div className="divide-y divide-border">
                                 {activeProjectsList.length > 0 ? activeProjectsList.map((project) => {
-                                    const IconComponent = ICON_MAP[project.icon || 'folder'] || Folder
+                                    const IconComponent = project.status === 'pinned' ? Folder : (ICON_MAP[project.icon || 'folder'] || Folder)
                                     const ownerName = project.creator?.full_name || 'System'
 
                                     return (
@@ -358,7 +358,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                     <div className="bg-card border border-border rounded-xl overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                                         <div className="divide-y divide-border">
                                             {archivedProjectsList.map((project) => {
-                                                const IconComponent = ICON_MAP[project.icon || 'folder'] || Folder
+                                                const IconComponent = project.status === 'pinned' ? Folder : (ICON_MAP[project.icon || 'folder'] || Folder)
                                                 const ownerName = project.creator?.full_name || 'System'
 
                                                 return (

@@ -81,7 +81,7 @@ export default function ProjectDetailClient({
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-secondary text-foreground">
                                 {(() => {
-                                    const IconComponent = ICON_MAP[project.icon || 'leaf'] || Folder
+                                    const IconComponent = project.status === 'pinned' ? Folder : (ICON_MAP[project.icon || 'leaf'] || Folder)
                                     return <IconComponent className="w-6 h-6" style={{ color: project.color_code || '#fff' }} />
                                 })()}
                             </div>
