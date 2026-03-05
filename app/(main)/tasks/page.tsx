@@ -19,10 +19,17 @@ export default async function TasksPage() {
         `)
         .order('created_at', { ascending: false })
 
-    const { data: projects } = await supabase
+    const { data: rawProjects } = await supabase
         .from('projects')
         .select('*')
         .eq('status', 'active')
+
+    const projects = rawProjects?.map(p => {
+        if (p.icon && p.icon.startsWith('pinned-')) {
+            return { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
+        }
+        return p
+    })
 
     const { data: profiles } = await supabase
         .from('profiles')

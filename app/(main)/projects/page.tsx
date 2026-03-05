@@ -90,10 +90,30 @@ export default async function ProjectsPage() {
     })
 
     // Map to Project type
-    const projects = fetchedProjects?.map((p: any) => ({
-        ...p,
-        creator: p.creator // alias was applied if using `creator:profiles`? No, if we used `profiles(full_name)`, it comes as `profiles: { full_name }`.
-    }))
+    const projects = fetchedProjects?.map((p: any) => {
+        let mappedStatus = p.status
+        let mappedIcon = p.icon
+        if (p.icon && p.icon.startsWith('pinned-')) {
+            mappedStatus = 'pinned'
+            mappedIcon = p.icon.replace('pinned-', '')
+        }
+        return {
+            ...p,
+            status: mappedStatus,
+            icon: mappedIcon,
+            creator: p.creator
+        }
+    })
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    let isAdmin = false
+    if (user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        isAdmin = profile?.role === 'admin'
+    }
 
     return (
         <div className="space-y-8">
@@ -102,7 +122,7 @@ export default async function ProjectsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
                     <p className="text-muted-foreground mt-2">Manage your active workstreams.</p>
                 </div>
-                <NewProjectButton />
+                <NewProjectButton isAdmin={isAdmin} />
             </div>
 
             <ProjectList projects={projects || []} taskCounts={taskCounts} />

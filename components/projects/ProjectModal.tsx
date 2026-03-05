@@ -42,9 +42,10 @@ interface ProjectModalProps {
     isOpen: boolean
     onClose: () => void
     projectToEdit?: Project | null
+    isAdmin?: boolean
 }
 
-export function ProjectModal({ isOpen, onClose, projectToEdit }: ProjectModalProps) {
+export function ProjectModal({ isOpen, onClose, projectToEdit, isAdmin }: ProjectModalProps) {
     const [state, formAction, isPending] = useActionState(upsertProject, initialState)
     const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[5].value)
     const [selectedIcon, setSelectedIcon] = useState('leaf')
@@ -162,7 +163,18 @@ export function ProjectModal({ isOpen, onClose, projectToEdit }: ProjectModalPro
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">End Date</label>
+                            <label className="block text-sm font-medium mb-1 flex items-center justify-between">
+                                End Date
+                                {isAdmin && (
+                                    <button
+                                        type="button"
+                                        onClick={() => { setStartDate(''); setEndDate(''); }}
+                                        className="text-[10px] text-red-500 hover:underline"
+                                    >
+                                        Clear Timeline
+                                    </button>
+                                )}
+                            </label>
                             <input
                                 name="end_date"
                                 type="date"
@@ -254,6 +266,7 @@ export function ProjectModal({ isOpen, onClose, projectToEdit }: ProjectModalPro
                             className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm outline-none"
                         >
                             <option value="active">Active</option>
+                            {isAdmin && <option value="pinned">Pinned</option>}
                             <option value="archived">Archived</option>
                         </select>
                     </div>

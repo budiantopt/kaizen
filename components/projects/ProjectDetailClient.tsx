@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { Task, Project, Profile } from '@/types'
-import { ExternalLink, Info, Folder, Leaf, Users, GraduationCap, Heart, Globe, Recycle, BookOpen, HeartHandshake, Sprout, Wind } from 'lucide-react'
+import { ExternalLink, Info, Folder, Leaf, Users, GraduationCap, Heart, Globe, Recycle, BookOpen, HeartHandshake, Sprout, Wind, Settings } from 'lucide-react'
 import { ProjectModal } from '@/components/projects/ProjectModal'
 import { format } from 'date-fns'
 
@@ -54,7 +54,7 @@ export default function ProjectDetailClient({
                     onClick={() => setTab('tasks')}
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === 'tasks' ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 >
-                    My Tasks
+                    All Tasks
                 </button>
                 <button
                     onClick={() => setTab('about')}
@@ -66,7 +66,7 @@ export default function ProjectDetailClient({
 
             {tab === 'tasks' && (
                 <DashboardClient
-                    tasks={myTasks}
+                    tasks={tasks}
                     projects={projects}
                     profiles={profiles}
                     initialProjectId={project.id}
@@ -95,9 +95,10 @@ export default function ProjectDetailClient({
                         {canEdit && (
                             <button
                                 onClick={() => setIsEditProjectOpen(true)}
-                                className="text-sm border border-border bg-secondary hover:bg-secondary/80 px-3 py-1.5 rounded-md transition-colors"
+                                className="border border-border bg-secondary hover:bg-secondary/80 p-2 rounded-md transition-colors"
+                                title="Edit Project"
                             >
-                                Edit Project
+                                <Settings className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                             </button>
                         )}
                     </div>
@@ -105,11 +106,11 @@ export default function ProjectDetailClient({
 
                     <div className="space-y-6">
                         {/* Project Value */}
-                        {project.project_value && (
+                        {(project.project_value || 0) > 0 && (
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Project Value</h3>
                                 <p className="text-lg font-semibold text-foreground">
-                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(project.project_value)}
+                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(project.project_value || 0)}
                                 </p>
                             </div>
                         )}
@@ -164,6 +165,7 @@ export default function ProjectDetailClient({
                 isOpen={isEditProjectOpen}
                 onClose={() => setIsEditProjectOpen(false)}
                 projectToEdit={project}
+                isAdmin={currentUserProfile?.role === 'admin'}
             />
         </div>
     )

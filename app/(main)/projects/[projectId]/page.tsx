@@ -31,6 +31,18 @@ export default async function ProjectDetailPage(props: { params: Params }) {
         notFound()
     }
 
+    let mappedStatus = project.status
+    let mappedIcon = project.icon
+    if (project.icon && project.icon.startsWith('pinned-')) {
+        mappedStatus = 'pinned'
+        mappedIcon = project.icon.replace('pinned-', '')
+    }
+    const formattedProject = {
+        ...project,
+        status: mappedStatus,
+        icon: mappedIcon
+    }
+
     // Fetch Tasks for this Project
     const { data: tasks, error: taskError } = await supabase
         .from('tasks')
@@ -46,10 +58,17 @@ export default async function ProjectDetailPage(props: { params: Params }) {
         .order('end_date', { ascending: true })
 
     // Fetch All Projects (for moving tasks or creating new ones)
-    const { data: projects } = await supabase
+    const { data: rawProjects } = await supabase
         .from('projects')
         .select('*')
         .eq('status', 'active')
+
+    const projects = rawProjects?.map(p => {
+        if (p.icon && p.icon.startsWith('pinned-')) {
+            return { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
+        }
+        return p
+    })
 
     // Fetch Profiles
     const { data: profiles } = await supabase
@@ -64,7 +83,7 @@ export default async function ProjectDetailPage(props: { params: Params }) {
     return (
         <div>
             <ProjectDetailClient
-                project={project}
+                project={formattedProject}
                 tasks={formattedTasks || []}
                 projects={projects || []}
                 profiles={profiles || []}

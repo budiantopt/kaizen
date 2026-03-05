@@ -30,10 +30,17 @@ export default async function DashboardPage() {
         .select('task_id, user_id')
 
     // Fetch Projects (for the modal)
-    const { data: projects } = await supabase
+    const { data: rawProjects } = await supabase
         .from('projects')
         .select('*')
         .eq('status', 'active')
+
+    const projects = rawProjects?.map(p => {
+        if (p.icon && p.icon.startsWith('pinned-')) {
+            return { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
+        }
+        return p
+    })
 
     // Fetch Profiles (for assignee dropdown)
     const { data: profiles } = await supabase

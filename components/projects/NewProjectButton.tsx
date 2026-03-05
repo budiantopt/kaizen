@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { ProjectModal } from '@/components/projects/ProjectModal'
 
-export function NewProjectButton() {
+export function NewProjectButton({ isAdmin }: { isAdmin?: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
 
     return (
@@ -17,7 +17,7 @@ export function NewProjectButton() {
                 New Project
             </button>
 
-            <ProjectModal isOpen={isOpen} onClose={() => setIsOpen(false)} />
+            <ProjectModal isOpen={isOpen} onClose={() => setIsOpen(false)} isAdmin={isAdmin} />
         </>
     )
 }

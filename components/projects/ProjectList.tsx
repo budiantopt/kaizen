@@ -27,7 +27,13 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
     const [view, setView] = useState<'grid' | 'list' | 'calendar'>('grid')
     const [currentMonth, setCurrentMonth] = useState(new Date())
 
-    const activeProjectsList = projects.filter(p => p.status === 'active')
+    const activeProjectsList = projects
+        .filter(p => p.status === 'active' || p.status === 'pinned')
+        .sort((a, b) => {
+            if (a.status === 'pinned' && b.status !== 'pinned') return -1;
+            if (b.status === 'pinned' && a.status !== 'pinned') return 1;
+            return 0;
+        });
     const archivedProjectsList = projects.filter(p => p.status === 'archived')
 
     const getCounts = (pid: number) => taskCounts[pid] || { completed: 0, incomplete: 0 }
@@ -155,25 +161,25 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                                         </a>
                                                     )}
                                                 </div>
-                                                <p className="text-[10px] text-muted-foreground font-mono bg-secondary/50 px-2 py-0.5 rounded-md inline-block mt-0.5">{ownerName}</p>
+                                                {project.status !== 'pinned' && <p className="text-[10px] text-muted-foreground font-mono bg-secondary/50 px-2 py-0.5 rounded-md inline-block mt-0.5">{ownerName}</p>}
                                             </div>
                                         </div>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${project.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/20'}`}>
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${project.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : project.status === 'pinned' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/20'}`}>
                                             {project.status.toUpperCase()}
                                         </span>
                                     </div>
                                     <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 leading-relaxed">{project.description || "No description provided."}</p>
 
                                     <div className="space-y-3 pt-3 border-t border-border/50">
-                                        {project.project_value && (
+                                        {(project.project_value || 0) > 0 && project.status !== 'pinned' && (
                                             <div className="flex justify-between items-center text-xs">
                                                 <span className="text-muted-foreground">Value</span>
                                                 <span className="font-semibold font-mono">
-                                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(project.project_value)}
+                                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(project.project_value || 0)}
                                                 </span>
                                             </div>
                                         )}
-                                        {project.start_date && project.end_date && (
+                                        {project.start_date && project.end_date && project.status !== 'pinned' && (
                                             <div className="flex justify-between items-center text-xs">
                                                 <span className="text-muted-foreground">Timeline</span>
                                                 <span className="font-medium">
@@ -245,11 +251,11 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                             <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 leading-relaxed">{project.description || "No description provided."}</p>
 
                                             <div className="space-y-3 pt-3 border-t border-border/50">
-                                                {project.project_value && (
+                                                {(project.project_value || 0) > 0 && (
                                                     <div className="flex justify-between items-center text-xs">
                                                         <span className="text-muted-foreground">Value</span>
                                                         <span className="font-semibold font-mono">
-                                                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(project.project_value)}
+                                                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(project.project_value || 0)}
                                                         </span>
                                                     </div>
                                                 )}
@@ -317,7 +323,7 @@ export function ProjectList({ projects, taskCounts }: { projects: any[], taskCou
                                                                 </a>
                                                             )}
                                                         </div>
-                                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] border ${project.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/20'}`}>
+                                                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] border ${project.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : project.status === 'pinned' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-neutral-500/10 text-neutral-500 border-neutral-500/20'}`}>
                                                             {project.status.toUpperCase()}
                                                         </span>
                                                     </div>

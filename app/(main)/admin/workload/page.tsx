@@ -5,7 +5,10 @@ import { getInitials } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
-export default async function WorkloadOverviewPage() {
+export default async function WorkloadOverviewPage(props: { searchParams?: Promise<{ filter?: string }> }) {
+    const searchParams = props.searchParams ? await props.searchParams : {}
+    const dateFilter = searchParams.filter || 'all'
+
     const supabase = await createClient()
 
     const {
@@ -29,8 +32,8 @@ export default async function WorkloadOverviewPage() {
     const { data: tasks } = await supabase
         .from('tasks')
         .select(`
-            id, title, status, end_date,
-            project:projects(id, name, color_code, status),
+            id, title, status, end_date, created_at, updated_at,
+            project:projects(id, name, color_code, status, icon, project_value),
             assignees:task_assignees(
                 user_id,
                 profile:profiles(id, full_name, avatar_url, job_title)
@@ -39,11 +42,24 @@ export default async function WorkloadOverviewPage() {
         .order('created_at', { ascending: false })
 
     const formattedTasks = tasks
-        ?.filter((t: any) => t.project?.status !== 'archived')
-        .map((t: any) => ({
-            ...t,
-            assignees: t.assignees?.map((a: any) => a.profile) || [],
-        })) || []
+        ?.filter((t: any) => {
+            let pStatus = t.project?.status
+            if (t.project?.icon && t.project.icon.startsWith('pinned-')) {
+                pStatus = 'pinned'
+            }
+            return pStatus !== 'archived'
+        })
+        .map((t: any) => {
+            let p = t.project
+            if (p && p.icon && p.icon.startsWith('pinned-')) {
+                p = { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
+            }
+            return {
+                ...t,
+                project: p,
+                assignees: t.assignees?.map((a: any) => a.profile) || [],
+            }
+        }) || []
 
     const workloadByAssignee = new Map<
         string,
@@ -62,8 +78,36 @@ export default async function WorkloadOverviewPage() {
     >()
 
     const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    formattedTasks.forEach((task: any) => {
+    const filteredByDateTasks = formattedTasks.filter((t: any) => {
+        if (dateFilter === 'all') return true
+
+        const createdDate = new Date(t.created_at || 0)
+        const updatedDate = t.updated_at ? new Date(t.updated_at) : createdDate
+
+        if (dateFilter === 'today') {
+            return createdDate >= today || updatedDate >= today
+        }
+        if (dateFilter === 'yesterday') {
+            return (createdDate >= yesterday && createdDate < today) || (updatedDate >= yesterday && updatedDate < today)
+        }
+        if (dateFilter === '7days') {
+            return createdDate >= sevenDaysAgo || updatedDate >= sevenDaysAgo
+        }
+        if (dateFilter === '30days') {
+            return createdDate >= thirtyDaysAgo || updatedDate >= thirtyDaysAgo
+        }
+        return true
+    })
+
+    filteredByDateTasks.forEach((task: any) => {
         const isCompleted = task.status === 'done'
         const isOverdue = !isCompleted && new Date(task.end_date) < now
         const isIncomplete = !isCompleted
@@ -106,9 +150,18 @@ export default async function WorkloadOverviewPage() {
 
     return (
         <div className="space-y-8 p-6 max-w-7xl mx-auto w-full">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Workload Overview</h1>
-                <p className="text-muted-foreground mt-2">View active task counts per assignee grouped by project.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Workload Overview</h1>
+                    <p className="text-muted-foreground mt-2">View active task counts per assignee grouped by project.</p>
+                </div>
+                <div className="flex bg-secondary/50 p-1 rounded-lg border border-border items-center flex-wrap gap-1">
+                    <Link href="?filter=all" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${dateFilter === 'all' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>All Time</Link>
+                    <Link href="?filter=today" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${dateFilter === 'today' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>Today</Link>
+                    <Link href="?filter=yesterday" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${dateFilter === 'yesterday' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>Yesterday</Link>
+                    <Link href="?filter=7days" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${dateFilter === '7days' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>Last 7 Days</Link>
+                    <Link href="?filter=30days" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${dateFilter === '30days' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>Last 30 Days</Link>
+                </div>
             </div>
 
             {assigneesList.length === 0 ? (
@@ -153,6 +206,12 @@ export default async function WorkloadOverviewPage() {
                                         <p className="text-xs text-muted-foreground truncate">
                                             {assignee.profile.job_title || 'Member'}
                                         </p>
+                                        <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400" title="Total Deal Value Attribution">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(
+                                                Array.from(assignee.projects.values()).reduce((sum, p) => sum + (p.project.project_value || 0), 0)
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex gap-2 text-xs text-right">
                                         <div className="flex flex-col items-center p-1.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">

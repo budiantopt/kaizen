@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -15,7 +16,7 @@ const projectSchema = z.object({
     end_date: z.string().optional(),
     color_code: z.string(),
     icon: z.string().optional(),
-    status: z.enum(['active', 'archived']),
+    status: z.enum(['active', 'archived', 'pinned']),
 })
 
 
@@ -67,31 +68,34 @@ export async function upsertProject(prevState: any, formData: FormData) {
     const cleanStartDate = start_date || null
     const cleanEndDate = end_date || null
 
-    // If admin is updating, we might want to bypass RLS if RLS is strict.
-    // But typically RLS should allow admins. 
-    // Assuming RLS policy: "Users can update their own projects OR admins can update all"
-    // If that policy doesn't exist, we need createAdminClient.
-    // Let's safe bet: imports.
-
-    // We need to dynamic import or just import at top if we want to use it.
-    // Note: createAdminClient is server-only.
-    // We will use standard client first. If it fails and user is admin, we retry with admin?
-    // No, better to just use admin client if isAdmin.
-
-    const supabaseAction = supabase
+    // If admin is updating, we want to bypass RLS if RLS is strict and prevents pinned status.
+    let supabaseAction = supabase
     if (isAdmin) {
-        // We need to import createAdminClient. 
-        // Since I can't easily add import at top in this replace block without messing up,
-        // I will rely on the fact that I'll add the import in a separate step or just assume RLS is correct.
-        // Wait, the user wants me to FIX it. 
-        // I'll add the import first.
+        try {
+            supabaseAction = createAdminClient()
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
+    let dbStatus = status
+    let dbIcon = icon || 'leaf'
+
+    if (status === 'pinned') {
+        dbStatus = 'active'
+        dbIcon = `pinned-${dbIcon}`
+    } else {
+        // Enforce cleanup just in case
+        if (dbIcon.startsWith('pinned-')) {
+            dbIcon = dbIcon.replace('pinned-', '')
+        }
     }
 
     if (id) {
         // UPDATE
-        const { error } = await supabase
+        const { error } = await supabaseAction
             .from('projects')
-            .update({ name, description, resource_link, project_value, start_date: cleanStartDate, end_date: cleanEndDate, color_code, icon, status })
+            .update({ name, description, resource_link, project_value, start_date: cleanStartDate, end_date: cleanEndDate, color_code, icon: dbIcon, status: dbStatus })
             .eq('id', id)
 
         if (error) {
@@ -101,7 +105,7 @@ export async function upsertProject(prevState: any, formData: FormData) {
         }
     } else {
         // CREATE
-        const { error } = await supabase.from('projects').insert({
+        const { error } = await supabaseAction.from('projects').insert({
             name,
             description,
             resource_link,
@@ -109,8 +113,8 @@ export async function upsertProject(prevState: any, formData: FormData) {
             start_date: cleanStartDate,
             end_date: cleanEndDate,
             color_code,
-            icon: icon || 'leaf',
-            status,
+            icon: dbIcon,
+            status: dbStatus,
             created_by: user.id
             // created_at will default to now() due to migration
         })
@@ -165,5 +169,11 @@ export async function searchProjects(query: string) {
         console.error("Error searching projects:", error)
         return []
     }
-    return data
+    const dataWithPinned = data?.map(p => {
+        if (p.icon && p.icon.startsWith('pinned-')) {
+            return { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
+        }
+        return p
+    })
+    return dataWithPinned
 }
