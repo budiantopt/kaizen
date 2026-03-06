@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useActionState, useRef } from 'react'
-import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink } from 'lucide-react'
+import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon } from 'lucide-react'
 import { upsertTask } from '@/app/actions/tasks'
 import { Project, Profile, Task } from '@/types'
 import { getInitials } from '@/lib/utils'
@@ -39,6 +39,16 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
     const [currentStatus, setCurrentStatus] = useState<string>(taskToEdit?.status || 'todo')
     const [currentPriority, setCurrentPriority] = useState<string>(taskToEdit?.priority || 'medium')
+    const [copied, setCopied] = useState(false)
+
+    const copyLink = () => {
+        if (!taskToEdit) return;
+        const url = new URL(window.location.href)
+        url.searchParams.set('taskId', taskToEdit.id.toString())
+        navigator.clipboard.writeText(url.toString())
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
 
     // Reset state when opening/closing or changing task
     useEffect(() => {
@@ -88,9 +98,19 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                     <h2 className="text-lg font-bold">{isEdit ? 'Edit Task' : 'New Task'}</h2>
                     <div className="flex items-center gap-2">
                         {isEdit && (
-                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full uppercase font-bold tracking-wider">
-                                #{taskToEdit.id}
-                            </span>
+                            <div className="flex items-center gap-1 bg-secondary rounded-full pl-3 pr-1 py-1">
+                                <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider mr-1">
+                                    #{taskToEdit.id}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={copyLink}
+                                    title="Copy Task Link"
+                                    className="cursor-pointer text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-neutral-500/20 transition-colors"
+                                >
+                                    {copied ? <CheckIcon className="w-3 h-3 text-green-500" /> : <LinkIcon className="w-3 h-3" />}
+                                </button>
+                            </div>
                         )}
                         <button onClick={onClose} className="cursor-pointer text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-white/10 transition-colors">
                             <X className="w-5 h-5" />

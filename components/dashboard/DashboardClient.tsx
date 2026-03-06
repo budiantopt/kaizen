@@ -53,13 +53,36 @@ export default function DashboardClient({
 
     // Auto-Open Modal from URL
     useEffect(() => {
-        if (searchParams.get('create') === 'true') {
+        const createParam = searchParams.get('create')
+        const taskIdParam = searchParams.get('taskId')
+
+        if (createParam === 'true') {
             setIsModalOpen(true)
             // Optional: Clean up URL without refresh
             const url = new URL(window.location.href)
             url.searchParams.delete('create')
             window.history.replaceState({}, '', url)
+        } else if (taskIdParam) {
+            const taskId = parseInt(taskIdParam, 10)
+            const task = tasks.find(t => t.id === taskId)
+
+            if (task) {
+                const isAssignee = task.assignees?.some(a => a.id === currentUserId)
+                const isAdmin = currentUserRole === 'admin'
+
+                if (currentUserId && !isAssignee && !isAdmin) {
+                    addToast("Oops! It looks like this task is assigned to someone else.", "error")
+                } else {
+                    setTaskToEdit(task)
+                    setIsModalOpen(true)
+                }
+            }
+
+            const url = new URL(window.location.href)
+            url.searchParams.delete('taskId')
+            window.history.replaceState({}, '', url)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams])
 
     // Auto-Archive Logic
