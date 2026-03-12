@@ -8,8 +8,8 @@ import { z } from 'zod'
 // ... existing taskSchema ...
 const taskSchema = z.object({
     id: z.coerce.number().optional(),
-    title: z.string().min(1),
-    project_id: z.coerce.number(),
+    title: z.string().min(1, "Title is required"),
+    project_id: z.coerce.number().min(1, "Please select a project"),
     status: z.string(),
     priority: z.string().optional(),
     start_date: z.string(),

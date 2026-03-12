@@ -183,6 +183,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                 </div>
+                                {state.errors?.project_id && <p className="text-red-500 text-xs mt-1">{state.errors.project_id}</p>}
                             </div>
 
                             {/* Status */}
