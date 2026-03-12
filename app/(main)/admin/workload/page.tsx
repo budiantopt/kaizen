@@ -36,7 +36,7 @@ export default async function WorkloadOverviewPage(props: { searchParams?: Promi
             project:projects(id, name, color_code, status, icon, project_value),
             assignees:task_assignees(
                 user_id,
-                profile:profiles(id, full_name, avatar_url, job_title)
+                profile:profiles(id, full_name, avatar_url, job_title, role)
             )
         `)
         .order('created_at', { ascending: false })
@@ -54,10 +54,16 @@ export default async function WorkloadOverviewPage(props: { searchParams?: Promi
             if (p && p.icon && p.icon.startsWith('pinned-')) {
                 p = { ...p, status: 'pinned', icon: p.icon.replace('pinned-', '') }
             }
+
+            // Exclude task assignees who are admins
+            const filteredAssignees = t.assignees
+                ?.map((a: any) => a.profile)
+                .filter((profile: any) => profile && profile.role !== 'admin') || []
+
             return {
                 ...t,
                 project: p,
-                assignees: t.assignees?.map((a: any) => a.profile) || [],
+                assignees: filteredAssignees,
             }
         }) || []
 

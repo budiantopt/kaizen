@@ -69,8 +69,8 @@ export default async function PerformancePage() {
         .gte('end_date', semStart)
         .lte('end_date', semEnd)
 
-    // Fetch profiles for names and avatars
-    const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url')
+    // Fetch profiles for names and avatars (exclude admins)
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, avatar_url, role').neq('role', 'admin')
 
     // Aggregate EXP Points
     const userStats: Record<string, { points: number, onTime: number, late: number, offTrack: number }> = {}
@@ -120,15 +120,17 @@ export default async function PerformancePage() {
         }
     })
 
-    const leaderboardData = Object.entries(userStats).map(([uid, stats]) => {
-        const profile = profiles?.find(p => p.id === uid)
-        return {
-            id: uid,
-            name: profile?.full_name || 'Unknown',
-            avatar: profile?.avatar_url,
-            ...stats
-        }
-    }).sort((a, b) => b.points - a.points)
+    const leaderboardData = Object.entries(userStats)
+        .filter(([uid]) => profiles?.some(p => p.id === uid))
+        .map(([uid, stats]) => {
+            const profile = profiles?.find(p => p.id === uid)
+            return {
+                id: uid,
+                name: profile?.full_name || 'Unknown',
+                avatar: profile?.avatar_url,
+                ...stats
+            }
+        }).sort((a, b) => b.points - a.points)
     const topThreeLeaderboard = leaderboardData.slice(0, 3)
 
     return (

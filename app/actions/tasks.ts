@@ -220,3 +220,24 @@ export async function updateTaskStatus(taskId: number, newStatus: string) {
     revalidatePath('/dashboard')
     revalidatePath('/admin/kanban')
 }
+
+export async function deleteTask(taskId: number) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Unauthorized')
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (profile?.role !== 'admin') {
+        throw new Error('Unauthorized: Only Admins can delete tasks.')
+    }
+
+    const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+    if (error) {
+        console.error('Delete Task Error:', error)
+        throw new Error('Failed to delete task')
+    }
+
+    revalidatePath('/dashboard')
+    revalidatePath('/admin/kanban')
+}

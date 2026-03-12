@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useActionState, useRef } from 'react'
-import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon } from 'lucide-react'
-import { upsertTask } from '@/app/actions/tasks'
+import { useState, useEffect, useActionState, useRef, useTransition } from 'react'
+import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon, Trash2 } from 'lucide-react'
+import { upsertTask, deleteTask } from '@/app/actions/tasks'
 import { Project, Profile, Task } from '@/types'
 import { getInitials } from '@/lib/utils'
 
@@ -19,6 +19,7 @@ interface TaskModalProps {
     profiles: Profile[]
     taskToEdit?: Task | null
     defaultProjectId?: number | null
+    currentUserRole?: 'admin' | 'member'
 }
 
 const PRESET_COLORS = [
@@ -34,8 +35,10 @@ const PRESET_COLORS = [
     '#71717a', // Zinc
 ]
 
-export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId, currentUserRole }: TaskModalProps) {
     const [state, formAction, isPending] = useActionState(upsertTask, initialState)
+    const [isPendingDelete, startDelete] = useTransition()
+    const [deleteError, setDeleteError] = useState('')
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
     const [currentStatus, setCurrentStatus] = useState<string>(taskToEdit?.status || 'todo')
     const [currentPriority, setCurrentPriority] = useState<string>(taskToEdit?.priority || 'medium')
@@ -48,6 +51,20 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
         navigator.clipboard.writeText(url.toString())
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
+    }
+
+    const handleDelete = () => {
+        if (!taskToEdit) return;
+        if (!confirm('Are you sure you want to delete this task?')) return;
+        
+        startDelete(async () => {
+            try {
+                await deleteTask(taskToEdit.id)
+                onClose()
+            } catch (error: any) {
+                setDeleteError(error.message)
+            }
+        })
     }
 
     // Reset state when opening/closing or changing task
@@ -102,6 +119,17 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                                 <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider mr-1">
                                     #{taskToEdit.id}
                                 </span>
+                                {currentUserRole === 'admin' && (
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={isPendingDelete}
+                                        title="Delete Task"
+                                        className="cursor-pointer text-red-500 hover:text-red-400 p-1 rounded-full hover:bg-neutral-500/20 transition-colors disabled:opacity-50"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={copyLink}
@@ -342,6 +370,11 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                         {state.message && (
                             <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg text-sm">
                                 {state.message}
+                            </div>
+                        )}
+                        {deleteError && (
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg text-sm">
+                                {deleteError}
                             </div>
                         )}
                     </form>

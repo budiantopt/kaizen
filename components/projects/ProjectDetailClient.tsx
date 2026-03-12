@@ -72,6 +72,8 @@ export default function ProjectDetailClient({
                     initialProjectId={project.id}
                     hideProjectFilters={true}
                     title={project.name}
+                    currentUserId={currentUserId}
+                    currentUserRole={currentUserProfile?.role}
                 />
             )}
 
