@@ -232,10 +232,17 @@ export async function deleteTask(taskId: number) {
         throw new Error('Unauthorized: Only Admins can delete tasks.')
     }
 
+    // explicitly delete task_assignees first to prevent foreign key errors if ON DELETE CASCADE is missing
+    const { error: assigneesError } = await supabase.from('task_assignees').delete().eq('task_id', taskId)
+    if (assigneesError) {
+        console.error('Delete Task Assignees Error:', assigneesError)
+        // We log but continue, the main delete might still succeed if there are no assignees
+    }
+
     const { error } = await supabase.from('tasks').delete().eq('id', taskId)
     if (error) {
         console.error('Delete Task Error:', error)
-        throw new Error('Failed to delete task')
+        throw new Error('Failed to delete task: ' + error.message)
     }
 
     revalidatePath('/dashboard')
