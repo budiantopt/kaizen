@@ -1,25 +1,33 @@
+import { sendDailyDigestToUsers } from '@/app/actions/digest';
 import { NextResponse } from 'next/server';
-
-import { createClient } from '@/lib/supabase/server';
-// import { Resend } from 'resend';
 
 export async function GET(request: Request) {
     // 1. Validate Cron Secret
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return new NextResponse('Unauthorized', { status: 401 });
+        // If testing locally without secret, you might want to bypass or check environment
+        if (process.env.NODE_ENV !== 'production') {
+            // Keep bypass for dev/testing, only enforce in prod
+        } else {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
     }
 
-    const supabase = await createClient();
-
-    // 2. Fetch data (Placeholder)
-    // const { data: tasks } = await supabase.from('tasks').select('*').eq('status', 'done');
-
-    // 3. Send Emails (Placeholder)
-
-    return NextResponse.json({
-        success: true,
-        message: "Daily summary processing initiated",
-        timestamp: new Date().toISOString()
-    });
+    // 2. Process Digest
+    try {
+        const result = await sendDailyDigestToUsers();
+        
+        return NextResponse.json({
+            success: true,
+            message: "Daily digest sent successfully",
+            timestamp: new Date().toISOString(),
+            result
+        });
+    } catch (error: any) {
+        console.error("Cron Error:", error);
+        return NextResponse.json({
+            success: false,
+            error: error.message
+        }, { status: 500 });
+    }
 }
