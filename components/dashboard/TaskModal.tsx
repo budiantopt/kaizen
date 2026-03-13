@@ -77,12 +77,9 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
     // Close on success
     useEffect(() => {
         if (state.success) {
-            if ((currentStatus === 'complete' || currentStatus === 'done') && !evidenceLinkRef.current?.value) {
-                addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
-            }
             onClose()
         }
-    }, [state.success, onClose, currentStatus, addToast])
+    }, [state.success, onClose])
 
     if (!isOpen) return null
 

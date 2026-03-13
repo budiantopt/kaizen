@@ -111,6 +111,7 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                                         })
                                         if (!task.evidence_link) {
                                             addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
+                                            return
                                         }
                                     }
                                     await toggleTaskStatus(task.id, task.status)

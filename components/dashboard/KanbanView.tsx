@@ -464,6 +464,7 @@ export function KanbanView({
                 })
                 if (!activeTask.evidence_link) {
                     addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
+                    return
                 }
             }
             // 1. Optimistic Update

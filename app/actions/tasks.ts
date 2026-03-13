@@ -81,6 +81,10 @@ export async function upsertTask(prevState: any, formData: FormData) {
 
     const { id, title, project_id, status, priority, start_date, end_date, remarks, evidence_link } = validatedFields.data
 
+    if ((status === 'complete' || status === 'done') && !evidence_link) {
+        return { message: 'An attachment link (output/evidence) is required to complete this task.' }
+    }
+
     let taskId = id
 
     if (taskId) {
