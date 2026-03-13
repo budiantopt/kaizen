@@ -174,7 +174,7 @@ export function CommandMenu() {
                                             <Command.Item
                                                 key={`task-${task.id}`}
                                                 value={task.title}
-                                                onSelect={() => runCommand(() => router.push(`/tasks?taskId=${task.id}`))}
+                                                onSelect={() => runCommand(() => router.push(`/dashboard?taskId=${task.id}`))}
                                                 className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
                                             >
                                                 <CheckSquare className="mr-2 h-4 w-4 opacity-50" />
