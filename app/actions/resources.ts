@@ -2,6 +2,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -41,9 +42,20 @@ export async function upsertResource(prevState: any, formData: FormData) {
 
     const { id, title, description, link } = validatedFields.data
 
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = profile?.role === 'admin'
+    const adminSupabase = createAdminClient()
+
     if (id) {
-        // UPDATE
-        const { error } = await supabase
+        // UPDATE: Check permission first
+        const { data: existing } = await adminSupabase.from('resources').select('created_by').eq('id', id).single()
+        if (!existing) return { message: 'Resource not found', success: false }
+
+        if (!isAdmin && existing.created_by !== user.id) {
+            return { message: 'Permission denied: You can only edit your own resources', success: false }
+        }
+
+        const { error } = await adminSupabase
             .from('resources')
             .update({ title, description, link })
             .eq('id', id)
@@ -51,7 +63,7 @@ export async function upsertResource(prevState: any, formData: FormData) {
         if (error) return { message: 'Failed to Update Resource: ' + error.message, success: false }
     } else {
         // CREATE
-        const { error } = await supabase.from('resources').insert({
+        const { error } = await adminSupabase.from('resources').insert({
             title,
             description,
             link,
@@ -68,7 +80,21 @@ export async function upsertResource(prevState: any, formData: FormData) {
 
 export async function deleteResource(id: number) {
     const supabase = await createClient()
-    const { error } = await supabase.from('resources').delete().eq('id', id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { message: 'Unauthorized', success: false }
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = profile?.role === 'admin'
+    const adminSupabase = createAdminClient()
+
+    const { data: existing } = await adminSupabase.from('resources').select('created_by').eq('id', id).single()
+    if (!existing) return { message: 'Resource not found', success: false }
+
+    if (!isAdmin && existing.created_by !== user.id) {
+        return { message: 'Permission denied: You can only delete your own resources', success: false }
+    }
+
+    const { error } = await adminSupabase.from('resources').delete().eq('id', id)
     if (error) return { message: error.message, success: false }
     revalidatePath('/resources')
     return { message: 'Resource Deleted', success: true }

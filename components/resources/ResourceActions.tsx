@@ -15,11 +15,9 @@ export function ResourceActions({ isAdmin, hasData }: { isAdmin: boolean, hasDat
         setIsSeeding(false)
     }
 
-    if (!isAdmin) return null
-
     return (
         <div className="flex gap-2">
-            {!hasData && (
+            {!hasData && isAdmin && (
                 <button
                     onClick={handleSeed}
                     disabled={isSeeding}

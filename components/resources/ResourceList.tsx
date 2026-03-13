@@ -8,7 +8,7 @@ import { deleteResource } from '@/app/actions/resources'
 import { Resource } from '@/types'
 import { format } from 'date-fns'
 
-export function ResourceList({ resources, isAdmin }: { resources: Resource[], isAdmin: boolean }) {
+export function ResourceList({ resources, isAdmin, currentUserId }: { resources: Resource[], isAdmin: boolean, currentUserId: string }) {
     const [editingResource, setEditingResource] = useState<Resource | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
@@ -139,7 +139,7 @@ export function ResourceList({ resources, isAdmin }: { resources: Resource[], is
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                                {isAdmin && (
+                                {(isAdmin || resource.created_by === currentUserId) && (
 
                                     <div className="flex items-center gap-1 border-l border-border pl-2 ml-2">
                                         <button

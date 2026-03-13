@@ -52,7 +52,7 @@ export default async function ResourcesPage() {
             </div>
 
             {hasData ? (
-                <ResourceList resources={resources || []} isAdmin={isAdmin} />
+                <ResourceList resources={resources || []} isAdmin={isAdmin} currentUserId={user.id} />
             ) : (
                 <div className="py-12 text-center text-muted-foreground border border-dashed border-border rounded-xl">
                     No resources available.
