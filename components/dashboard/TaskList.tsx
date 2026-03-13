@@ -1,7 +1,8 @@
 'use client'
 
-import { format, isAfter, isBefore } from 'date-fns'
+import { format, isAfter, isBefore, startOfDay } from 'date-fns'
 import { Task } from '@/types'
+import { useToast } from '@/components/ui/toast-context'
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, Check } from 'lucide-react'
 import { toggleTaskStatus } from '@/app/actions/tasks'
@@ -13,6 +14,7 @@ type SortField = 'title' | 'project' | 'status' | 'end_date' | 'assignee' | 'pri
 type SortDirection = 'asc' | 'desc'
 
 export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Task) => void }) {
+    const { addToast } = useToast()
     const [sortField, setSortField] = useState<SortField>('end_date')
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
@@ -107,6 +109,9 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                                             spread: 70,
                                             origin: { y: 0.6 }
                                         })
+                                        if (!task.evidence_link) {
+                                            addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
+                                        }
                                     }
                                     await toggleTaskStatus(task.id, task.status)
                                 }}
@@ -196,7 +201,7 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                             })()}
                         </div>
 
-                        <div className="w-[15%] text-sm text-muted-foreground pl-2">
+                        <div className={`w-[15%] text-sm pl-2 ${task.status === 'off_track' && task.end_date && isBefore(startOfDay(new Date(task.end_date)), startOfDay(new Date())) ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
                             {task.end_date ? format(new Date(task.end_date), 'MMM d') : '-'}
                         </div>
 

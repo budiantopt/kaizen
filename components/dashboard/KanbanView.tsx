@@ -126,7 +126,7 @@ function TaskCard({ task, isOverlay, onEdit }: { task: Task, isOverlay?: boolean
                 )}
             </div>
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
+                <div className={`flex items-center gap-1 ${task.status === 'off_track' && task.end_date && isBefore(startOfDay(new Date(task.end_date)), startOfDay(new Date())) ? 'text-red-500 font-medium' : ''}`}>
                     <Clock className="w-3 h-3" />
                     {task.end_date ? format(new Date(task.end_date), 'MMM d') : '-'}
                 </div>
@@ -462,6 +462,9 @@ export function KanbanView({
                     spread: 70,
                     origin: { y: 0.6 }
                 })
+                if (!activeTask.evidence_link) {
+                    addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
+                }
             }
             // 1. Optimistic Update
             setTasks((prev) => prev.map(t =>

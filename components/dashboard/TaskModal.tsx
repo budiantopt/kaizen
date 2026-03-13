@@ -3,6 +3,7 @@
 import { useState, useEffect, useActionState, useRef } from 'react'
 import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon } from 'lucide-react'
 import { upsertTask } from '@/app/actions/tasks'
+import { useToast } from '@/components/ui/toast-context'
 import { Project, Profile, Task } from '@/types'
 import { getInitials } from '@/lib/utils'
 
@@ -37,6 +38,8 @@ const PRESET_COLORS = [
 
 export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId, currentUserRole }: TaskModalProps) {
     const [state, formAction, isPending] = useActionState(upsertTask, initialState)
+    const { addToast } = useToast()
+    const evidenceLinkRef = useRef<HTMLInputElement>(null)
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
     const [currentStatus, setCurrentStatus] = useState<string>(taskToEdit?.status || 'todo')
     const [currentPriority, setCurrentPriority] = useState<string>(taskToEdit?.priority || 'medium')
@@ -74,9 +77,12 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
     // Close on success
     useEffect(() => {
         if (state.success) {
+            if ((currentStatus === 'complete' || currentStatus === 'done') && !evidenceLinkRef.current?.value) {
+                addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
+            }
             onClose()
         }
-    }, [state.success, onClose])
+    }, [state.success, onClose, currentStatus, addToast])
 
     if (!isOpen) return null
 
@@ -261,6 +267,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                                         <input
                                             name="evidence_link"
                                             type="url"
+                                            ref={evidenceLinkRef}
                                             defaultValue={taskToEdit?.evidence_link || ''}
                                             className="w-full bg-secondary/50 border border-border rounded-lg px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-white/20"
                                             placeholder="https://..."
