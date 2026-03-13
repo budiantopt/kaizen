@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation'
 import { Command } from 'cmdk'
 import { Calendar, Smile, Calculator, User, CreditCard, Settings, Search, LayoutGrid, CheckSquare, Layers, BarChart2, Library, Plus, ArrowRight, X } from 'lucide-react'
 import { searchProjects } from '@/app/actions/projects'
+import { searchTasks } from '@/app/actions/tasks'
 
 export function CommandMenu() {
     const router = useRouter()
     const [open, setOpen] = React.useState(false)
+    const [query, setQuery] = React.useState('')
     const [projects, setProjects] = React.useState<any[]>([])
+    const [tasks, setTasks] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(false)
 
     React.useEffect(() => {
@@ -17,10 +20,6 @@ export function CommandMenu() {
             if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
                 e.preventDefault()
                 setOpen((open) => !open)
-                // Fetch projects when opening
-                if (!open) {
-                    fetchProjects()
-                }
             }
             if (e.key === 'Escape') {
                 setOpen(false)
@@ -29,19 +28,41 @@ export function CommandMenu() {
 
         document.addEventListener('keydown', down)
         return () => document.removeEventListener('keydown', down)
-    }, [open])
+    }, [])
 
-    const fetchProjects = async () => {
-        setLoading(true)
-        try {
-            const data = await searchProjects('')
-            setProjects(data || [])
-        } catch (e) {
-            console.error(e)
-        } finally {
-            setLoading(false)
+    React.useEffect(() => {
+        if (!open) {
+            setQuery('')
+            setProjects([])
+            setTasks([])
+            return
         }
-    }
+
+        const fetchSearchResults = async () => {
+            if (!query.trim()) {
+                setProjects([])
+                setTasks([])
+                return
+            }
+
+            setLoading(true)
+            try {
+                const [projectsData, tasksData] = await Promise.all([
+                    searchProjects(query),
+                    searchTasks(query)
+                ])
+                setProjects(projectsData || [])
+                setTasks(tasksData || [])
+            } catch (e) {
+                console.error(e)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        const debounceTimer = setTimeout(fetchSearchResults, 300)
+        return () => clearTimeout(debounceTimer)
+    }, [query, open])
 
     const runCommand = React.useCallback((command: () => void) => {
         setOpen(false)
@@ -65,6 +86,8 @@ export function CommandMenu() {
                         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
                         <Command.Input
                             autoFocus
+                            value={query}
+                            onValueChange={setQuery}
                             placeholder="Type a command or search..."
                             className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
                         />
@@ -119,26 +142,55 @@ export function CommandMenu() {
                             </Command.Item>
                         </Command.Group>
 
-                        <Command.Group heading="Jump to Project" className="text-xs font-medium text-muted-foreground px-2 py-1.5">
-                            {loading ? (
-                                <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading specific projects...</div>
-                            ) : (
-                                projects.map((project) => (
-                                    <Command.Item
-                                        key={project.id}
-                                        onSelect={() => runCommand(() => router.push(`/projects/${project.id}`))}
-                                        className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
-                                    >
-                                        <div
-                                            className="mr-2 h-2 w-2 rounded-full"
-                                            style={{ backgroundColor: project.color_code || '#666' }}
-                                        />
-                                        <span>{project.name}</span>
-                                        <ArrowRight className="ml-auto h-3 w-3 opacity-50" />
-                                    </Command.Item>
-                                ))
-                            )}
-                        </Command.Group>
+                        {query.trim().length > 0 && (
+                            <>
+                                {loading && (
+                                    <div className="px-4 py-3 text-sm text-muted-foreground text-center">Searching...</div>
+                                )}
+                                
+                                {!loading && projects.length > 0 && (
+                                    <Command.Group heading="Projects" className="text-xs font-medium text-muted-foreground px-2 py-1.5">
+                                        {projects.map((project) => (
+                                            <Command.Item
+                                                key={`project-${project.id}`}
+                                                value={project.name}
+                                                onSelect={() => runCommand(() => router.push(`/projects/${project.id}`))}
+                                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
+                                            >
+                                                <div
+                                                    className="mr-2 h-2 w-2 rounded-full"
+                                                    style={{ backgroundColor: project.color_code || '#666' }}
+                                                />
+                                                <span>{project.name}</span>
+                                                <ArrowRight className="ml-auto h-3 w-3 opacity-50" />
+                                            </Command.Item>
+                                        ))}
+                                    </Command.Group>
+                                )}
+
+                                {!loading && tasks.length > 0 && (
+                                    <Command.Group heading="Tasks" className="text-xs font-medium text-muted-foreground px-2 py-1.5 mt-2">
+                                        {tasks.map((task) => (
+                                            <Command.Item
+                                                key={`task-${task.id}`}
+                                                value={task.title}
+                                                onSelect={() => runCommand(() => router.push(`/tasks?taskId=${task.id}`))}
+                                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
+                                            >
+                                                <CheckSquare className="mr-2 h-4 w-4 opacity-50" />
+                                                <span className="truncate">{task.title}</span>
+                                                <div className="ml-auto pl-2 flex items-center gap-2 text-[10px] text-muted-foreground shrink-0 uppercase pointer-events-none">
+                                                    <span className="px-1.5 py-0.5 rounded-full border border-border/50 bg-secondary/50">
+                                                        {task.status?.replace('_', ' ')}
+                                                    </span>
+                                                    <ArrowRight className="h-3 w-3" />
+                                                </div>
+                                            </Command.Item>
+                                        ))}
+                                    </Command.Group>
+                                )}
+                            </>
+                        )}
 
                         <div className="mt-4 pt-4 border-t border-border px-2 pb-2">
                             <div className="flex items-center justify-between text-[10px] text-muted-foreground">

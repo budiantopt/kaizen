@@ -252,3 +252,20 @@ export async function deleteTask(taskId: number) {
     revalidatePath('/dashboard')
     revalidatePath('/admin/kanban')
 }
+
+export async function searchTasks(query: string) {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+        .from('tasks')
+        .select('id, title, status')
+        .ilike('title', `%${query}%`)
+        .limit(20)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error("Error searching tasks:", error)
+        return []
+    }
+    return data
+}
