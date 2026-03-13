@@ -3,7 +3,8 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { Command } from 'cmdk'
-import { Calendar, Smile, Calculator, User, CreditCard, Settings, Search, LayoutGrid, CheckSquare, Layers, BarChart2, Library, Plus, ArrowRight, X } from 'lucide-react'
+import { Calendar, Smile, Calculator, User, CreditCard, Settings, Search, LayoutGrid, CheckSquare, Layers, BarChart2, Library, Plus, ArrowRight, X, Gauge, BookOpen, Activity, Users, Megaphone, Monitor } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { searchProjects } from '@/app/actions/projects'
 import { searchTasks } from '@/app/actions/tasks'
 
@@ -14,6 +15,19 @@ export function CommandMenu() {
     const [projects, setProjects] = React.useState<any[]>([])
     const [tasks, setTasks] = React.useState<any[]>([])
     const [loading, setLoading] = React.useState(false)
+    const [isAdmin, setIsAdmin] = React.useState(false)
+
+    React.useEffect(() => {
+        const fetchRole = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+                if (profile?.role === 'admin') setIsAdmin(true)
+            }
+        }
+        fetchRole()
+    }, [])
 
     React.useEffect(() => {
         const down = (e: KeyboardEvent) => {
@@ -97,9 +111,16 @@ export function CommandMenu() {
                     </div>
 
                     <Command.List className="max-h-[300px] overflow-y-auto overflow-x-hidden p-2">
-                        <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
-                            No results found.
-                        </Command.Empty>
+                        {!loading && (
+                            <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
+                                No results found.
+                            </Command.Empty>
+                        )}
+                        {loading && (
+                            <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
+                                Searching...
+                            </Command.Empty>
+                        )}
 
                         <Command.Group heading="Actions" className="text-xs font-medium text-muted-foreground px-2 py-1.5 mb-2">
                             <Command.Item
@@ -112,40 +133,61 @@ export function CommandMenu() {
                         </Command.Group>
 
                         <Command.Group heading="Navigation" className="text-xs font-medium text-muted-foreground px-2 py-1.5 mb-2">
-                            <Command.Item
-                                onSelect={() => runCommand(() => router.push('/dashboard'))}
-                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
-                            >
+                            <Command.Item onSelect={() => runCommand(() => router.push('/dashboard'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
                                 <LayoutGrid className="mr-2 h-4 w-4" />
-                                <span>Dashboard</span>
+                                <span>Team Tasks</span>
                             </Command.Item>
-                            <Command.Item
-                                onSelect={() => runCommand(() => router.push('/projects'))}
-                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
-                            >
+                            <Command.Item onSelect={() => runCommand(() => router.push('/tasks'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                <CheckSquare className="mr-2 h-4 w-4" />
+                                <span>My Tasks</span>
+                            </Command.Item>
+                            <Command.Item onSelect={() => runCommand(() => router.push('/projects'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
                                 <Layers className="mr-2 h-4 w-4" />
                                 <span>Projects</span>
                             </Command.Item>
-                            <Command.Item
-                                onSelect={() => runCommand(() => router.push('/tasks'))}
-                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
-                            >
-                                <CheckSquare className="mr-2 h-4 w-4" />
-                                <span>Tasks</span>
+                            <Command.Item onSelect={() => runCommand(() => router.push('/performance'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                <Gauge className="mr-2 h-4 w-4" />
+                                <span>Performance</span>
                             </Command.Item>
-                            <Command.Item
-                                onSelect={() => runCommand(() => router.push('/resources'))}
-                                className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted text-foreground"
-                            >
+                            <Command.Item onSelect={() => runCommand(() => router.push('/resources'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
                                 <Library className="mr-2 h-4 w-4" />
                                 <span>Resources</span>
                             </Command.Item>
+                            <Command.Item onSelect={() => runCommand(() => router.push('/agenda'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                <span>Agenda</span>
+                            </Command.Item>
+                            <Command.Item onSelect={() => runCommand(() => router.push('/guide'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                <span>Guide</span>
+                            </Command.Item>
                         </Command.Group>
+
+                        {isAdmin && (
+                            <Command.Group heading="Admin" className="text-xs font-medium text-muted-foreground px-2 py-1.5 mb-2">
+                                <Command.Item onSelect={() => runCommand(() => router.push('/admin/workload'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                    <Activity className="mr-2 h-4 w-4" />
+                                    <span>Workload</span>
+                                </Command.Item>
+                                <Command.Item onSelect={() => runCommand(() => router.push('/admin/users'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                    <Users className="mr-2 h-4 w-4" />
+                                    <span>Users</span>
+                                </Command.Item>
+                                <Command.Item onSelect={() => runCommand(() => router.push('/admin/announcements'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                    <Megaphone className="mr-2 h-4 w-4" />
+                                    <span>Announcements</span>
+                                </Command.Item>
+                                <Command.Item onSelect={() => runCommand(() => router.push('/admin/kanban'))} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-muted text-foreground">
+                                    <Monitor className="mr-2 h-4 w-4" />
+                                    <span>Gemba</span>
+                                </Command.Item>
+                            </Command.Group>
+                        )}
 
                         {query.trim().length > 0 && (
                             <>
                                 {loading && (
-                                    <div className="px-4 py-3 text-sm text-muted-foreground text-center">Searching...</div>
+                                    <div className="px-4 py-3 text-sm text-muted-foreground text-center line-through opacity-0 hidden"></div>
                                 )}
                                 
                                 {!loading && projects.length > 0 && (
