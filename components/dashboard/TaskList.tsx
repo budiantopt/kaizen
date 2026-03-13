@@ -104,17 +104,23 @@ export function TaskList({ tasks, onEdit }: { tasks: Task[], onEdit?: (task: Tas
                                 onClick={async (e) => {
                                     e.stopPropagation()
                                     if (task.status !== 'done' && task.status !== 'complete') {
-                                        confetti({
-                                            particleCount: 100,
-                                            spread: 70,
-                                            origin: { y: 0.6 }
-                                        })
                                         if (!task.evidence_link) {
                                             addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
                                             return
                                         }
+                                        try {
+                                            await toggleTaskStatus(task.id, task.status)
+                                            confetti({
+                                                particleCount: 100,
+                                                spread: 70,
+                                                origin: { y: 0.6 }
+                                            })
+                                        } catch (e) {
+                                            // Handle error if needed
+                                        }
+                                    } else {
+                                        await toggleTaskStatus(task.id, task.status)
                                     }
-                                    await toggleTaskStatus(task.id, task.status)
                                 }}
                                 className={`cursor-pointer w-5 h-5 rounded-full border flex items-center justify-center transition-all ${task.status === 'done' || task.status === 'complete'
                                     ? 'bg-green-600 border-green-600 text-white'

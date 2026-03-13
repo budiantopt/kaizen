@@ -457,11 +457,6 @@ export function KanbanView({
         // If status changed
         if (newStatus && newStatus !== activeTask.status) {
             if (newStatus === 'complete' || newStatus === 'done') {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                })
                 if (!activeTask.evidence_link) {
                     addToast("Please provide an attachment link (output/evidence like report, sheet, deck, etc.) for completed tasks.", "error")
                     return
@@ -476,6 +471,13 @@ export function KanbanView({
             try {
                 await updateTaskStatus(activeId, newStatus)
                 addToast("Task updated", "success")
+                if (newStatus === 'complete' || newStatus === 'done') {
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    })
+                }
             } catch (err) {
                 console.error("Failed to update status", err)
                 addToast("Failed to update task", "error")
