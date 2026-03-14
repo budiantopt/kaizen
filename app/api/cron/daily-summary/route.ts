@@ -1,4 +1,5 @@
 import { sendDailyDigestToUsers } from '@/app/actions/digest';
+import { getSetting } from '@/app/actions/settings';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -13,8 +14,19 @@ export async function GET(request: Request) {
         }
     }
 
-    // 2. Process Digest
+    // 2. Check if enabled
     try {
+        const isEnabledValue = await getSetting('digest_email_enabled', true);
+        const isEnabled = isEnabledValue === null ? true : !!isEnabledValue;
+
+        if (!isEnabled) {
+            return NextResponse.json({
+                success: true,
+                message: "Daily digest is currently disabled in settings",
+                timestamp: new Date().toISOString()
+            });
+        }
+
         const result = await sendDailyDigestToUsers();
         
         return NextResponse.json({

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AnnouncementForm } from '@/components/admin/AnnouncementForm'
+import { DigestToggle } from '@/components/admin/DigestToggle'
 
 export default async function AnnouncementsPage() {
     const supabase = await createClient()
@@ -28,7 +29,7 @@ export default async function AnnouncementsPage() {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
     return (
         <div className="space-y-8">
@@ -44,6 +45,14 @@ export default async function AnnouncementsPage() {
                         Set a banner message that appears at the top of the screen for all users.
                     </p>
                     <AnnouncementForm activeAnnouncement={activeAnnouncement} />
+                </div>
+
+                <div className="bg-card border border-border rounded-xl p-6">
+                    <h3 className="text-lg font-bold mb-4">Email Digest Settings</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                        Configure the automated email summary system.
+                    </p>
+                    <DigestToggle />
                 </div>
             </div>
         </div>
