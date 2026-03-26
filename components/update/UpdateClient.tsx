@@ -74,7 +74,7 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
                     {/* Completed Section First */}
                     <section className="relative">
                         <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
-                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-blue-400">Completed Proposal</h2>
+                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">Completed Proposal</h2>
                             <div className="h-px flex-grow bg-white/10" />
                             <span className="text-sm font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
                                 {completedTasks.length} Done
@@ -86,7 +86,7 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
                     {/* On Queue Section */}
                     <section className="relative">
                         <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
-                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-blue-400">On Queue</h2>
+                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">On Queue</h2>
                             <div className="h-px flex-grow bg-white/10" />
                             <span className="text-sm font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 whitespace-nowrap">
                                 {onQueueTasks.length} Pending
