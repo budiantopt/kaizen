@@ -1,15 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
-import { ExternalLink, Calendar, User, CheckCircle2, Clock, MousePointer2 } from 'lucide-react'
+import { ExternalLink, Calendar, User, CheckCircle2, Clock, MousePointer2, Search, X } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 
 export default function UpdateClient({ tasks }: { tasks: any[] }) {
+    const [searchQuery, setSearchQuery] = useState('')
+
+    // Filter tasks by proposal name
+    const filteredTasks = tasks.filter(t => 
+        t.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
     // Separate tasks
-    const completedTasks = tasks.filter(t => t.status === 'complete' || t.status === 'done')
+    const completedTasks = filteredTasks.filter(t => t.status === 'complete' || t.status === 'done')
         .sort((a, b) => new Date(b.completed_at || b.updated_at).getTime() - new Date(a.completed_at || a.updated_at).getTime())
 
-    const onQueueTasks = tasks.filter(t => t.status !== 'complete' && t.status !== 'done')
+    const onQueueTasks = filteredTasks.filter(t => t.status !== 'complete' && t.status !== 'done')
         .sort((a, b) => {
             if (!a.end_date) return 1
             if (!b.end_date) return -1
@@ -25,26 +33,50 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
             </div>
 
             <div className="max-w-7xl mx-auto relative z-10">
-                <header className="mb-16 space-y-4 text-left">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 mb-2">
-                        Public Access
+                <header className="mb-12 space-y-8 text-left">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-400 mb-2">
+                            Public Access
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+                            Proposal <br className="hidden md:block" />
+                            <span className="text-blue-400">Development</span>
+                        </h1>
+                        <p className="text-neutral-400 text-lg md:text-xl max-w-2xl leading-relaxed">
+                            Track progress and provide quick updates.
+                        </p>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
-                        Proposal <br className="hidden md:block" />
-                        <span className="text-blue-400">Development</span>
-                    </h1>
-                    <p className="text-neutral-400 text-lg md:text-xl max-w-2xl leading-relaxed">
-                        Track progress and provide quick updates.
-                    </p>
+
+                    {/* Search Bar */}
+                    <div className="relative max-w-md group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-neutral-500 group-focus-within:text-blue-400 transition-colors" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Find proposal..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-3xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-lg backdrop-blur-md hover:bg-white/[0.08]"
+                        />
+                        {searchQuery && (
+                            <button 
+                                onClick={() => setSearchQuery('')}
+                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-500 hover:text-white transition-colors"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        )}
+                    </div>
                 </header>
 
                 <div className="space-y-24">
                     {/* Completed Section First */}
-                    <section>
-                        <div className="flex items-center gap-4 mb-8">
-                            <h2 className="text-3xl font-black tracking-tight text-blue-400">Completed Proposal</h2>
+                    <section className="relative">
+                        <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
+                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-blue-400">Completed Proposal</h2>
                             <div className="h-px flex-grow bg-white/10" />
-                            <span className="text-sm font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                            <span className="text-sm font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
                                 {completedTasks.length} Done
                             </span>
                         </div>
@@ -52,17 +84,29 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
                     </section>
 
                     {/* On Queue Section */}
-                    <section>
-                        <div className="flex items-center gap-4 mb-8">
-                            <h2 className="text-3xl font-black tracking-tight text-blue-400">On Queue</h2>
+                    <section className="relative">
+                        <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
+                            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-blue-400">On Queue</h2>
                             <div className="h-px flex-grow bg-white/10" />
-                            <span className="text-sm font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                            <span className="text-sm font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 whitespace-nowrap">
                                 {onQueueTasks.length} Pending
                             </span>
                         </div>
                         <TaskTable tasks={onQueueTasks} type="queue" />
                     </section>
                 </div>
+                
+                {filteredTasks.length === 0 && (
+                    <div className="py-40 flex flex-col items-center justify-center text-center">
+                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                            <Search className="w-10 h-10 text-neutral-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold mb-2">No results found</h3>
+                        <p className="text-neutral-500 max-w-xs">
+                            We couldn't find any proposal matching "{searchQuery}". Try a different search term.
+                        </p>
+                    </div>
+                )}
                 
                 <footer className="mt-32 pb-12 text-center text-neutral-600 text-sm border-t border-white/5 pt-12 flex flex-col items-center gap-4">
                      <div className="flex items-center gap-3 opacity-50 grayscale group hover:grayscale-0 hover:opacity-100 transition-all duration-300">
@@ -127,7 +171,7 @@ function TaskTable({ tasks, type }: { tasks: any[], type: 'complete' | 'queue' }
                                             <span className="text-lg font-bold truncate" title={task.title}>{task.title}</span>
                                         )}
                                         {!isCompleted && (
-                                            <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-tighter">
+                                            <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-tighter truncate">
                                                 {task.status.replace('_', ' ')}
                                             </span>
                                         )}
