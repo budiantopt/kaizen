@@ -47,32 +47,52 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
                         </p>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="relative max-w-md group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-neutral-500 group-focus-within:text-blue-400 transition-colors" />
+                    {/* Search Bar & Anchor Links */}
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                        <div className="relative w-full max-w-md group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-neutral-500 group-focus-within:text-blue-400 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Find proposal..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-3xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-lg backdrop-blur-md hover:bg-white/[0.08]"
+                            />
+                            {searchQuery && (
+                                <button 
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-500 hover:text-white transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            )}
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Find proposal..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-3xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-lg backdrop-blur-md hover:bg-white/[0.08]"
-                        />
-                        {searchQuery && (
-                            <button 
-                                onClick={() => setSearchQuery('')}
-                                className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-500 hover:text-white transition-colors"
+
+                        <nav className="flex items-center gap-3 p-1.5 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+                            <a 
+                                href="#completed" 
+                                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
                             >
-                                <X className="h-5 w-5" />
-                            </button>
-                        )}
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Completed
+                            </a>
+                            <div className="w-px h-4 bg-white/10" />
+                            <a 
+                                href="#queue" 
+                                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all text-amber-500 hover:text-amber-400 flex items-center gap-2"
+                            >
+                                <Clock className="w-3.5 h-3.5" />
+                                On Queue
+                            </a>
+                        </nav>
                     </div>
                 </header>
 
                 <div className="space-y-24">
                     {/* Completed Section First */}
-                    <section className="relative">
+                    <section id="completed" className="relative scroll-mt-32">
                         <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
                             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">Completed Proposal</h2>
                             <div className="h-px flex-grow bg-white/10" />
@@ -84,7 +104,7 @@ export default function UpdateClient({ tasks }: { tasks: any[] }) {
                     </section>
 
                     {/* On Queue Section */}
-                    <section className="relative">
+                    <section id="queue" className="relative scroll-mt-32">
                         <div className="sticky top-0 z-20 py-6 bg-black/80 backdrop-blur-md flex items-center gap-4 mb-2">
                             <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">On Queue</h2>
                             <div className="h-px flex-grow bg-white/10" />
