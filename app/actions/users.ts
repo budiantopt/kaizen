@@ -10,7 +10,8 @@ import { Resend } from 'resend'
 const updateUserSchema = z.object({
     userId: z.string(),
     role: z.string(),
-    job_title: z.string().optional()
+    job_title: z.string().optional(),
+    digest_enabled: z.string().optional()
 })
 
 const createUserSchema = z.object({
@@ -115,7 +116,8 @@ export async function updateUserRole(prevState: any, formData: FormData) {
     const rawData = {
         userId: formData.get('userId'),
         role: formData.get('role'),
-        job_title: formData.get('job_title')
+        job_title: formData.get('job_title'),
+        digest_enabled: formData.get('digest_enabled')
     }
 
     const validated = updateUserSchema.safeParse(rawData)
@@ -124,11 +126,14 @@ export async function updateUserRole(prevState: any, formData: FormData) {
         return { message: 'Invalid data' }
     }
 
-    const { userId, role, job_title } = validated.data
+    const { userId, role, job_title, digest_enabled } = validated.data
+    
+    // Convert string to boolean, default to true if undefined
+    const digestBool = digest_enabled === 'false' ? false : true
 
     const { error } = await supabase
         .from('profiles')
-        .update({ role, job_title })
+        .update({ role, job_title, digest_enabled: digestBool })
         .eq('id', userId)
 
     if (error) return { message: 'Failed: ' + error.message }
@@ -274,4 +279,28 @@ export async function deleteUser(userId: string) {
 
     revalidatePath('/admin')
     return { message: 'User deleted successfully', success: true }
+}
+
+export async function toggleUserDigest(userId: string, enabled: boolean) {
+    const supabase = await createClient()
+
+    // Auth Check
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { message: 'Unauthorized', success: false }
+
+    // Admin Check
+    const { data: adminProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (adminProfile?.role !== 'admin') {
+        return { message: 'Unauthorized', success: false }
+    }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ digest_enabled: enabled })
+        .eq('id', userId)
+
+    if (error) return { message: 'Failed to update digest settings: ' + error.message, success: false }
+
+    revalidatePath('/admin', 'layout')
+    return { message: 'Digest settings updated successfully', success: true }
 }

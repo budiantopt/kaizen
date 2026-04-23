@@ -167,8 +167,7 @@ export async function upsertTask(prevState: any, formData: FormData) {
         }
     }
 
-    revalidatePath('/dashboard')
-    revalidatePath('/admin/kanban') // Ensure polling sees latest immediately?
+    revalidatePath('/', 'layout')
     return { message: taskId ? 'Task Updated' : 'Task Created', success: true }
 }
 
@@ -188,8 +187,7 @@ export async function toggleTaskStatus(taskId: number, currentStatus: string) {
         .eq('id', taskId)
 
     if (error) throw new Error('Failed to update task')
-    revalidatePath('/dashboard')
-    revalidatePath('/admin/kanban')
+    revalidatePath('/', 'layout')
 }
 
 export async function updateTaskStatus(taskId: number, newStatus: string) {
@@ -221,8 +219,7 @@ export async function updateTaskStatus(taskId: number, newStatus: string) {
         throw new Error('Task not found or permission denied')
     }
 
-    revalidatePath('/dashboard')
-    revalidatePath('/admin/kanban')
+    revalidatePath('/', 'layout')
 }
 
 export async function deleteTask(taskId: number) {
@@ -249,8 +246,7 @@ export async function deleteTask(taskId: number) {
         throw new Error('Failed to delete task: ' + error.message)
     }
 
-    revalidatePath('/dashboard')
-    revalidatePath('/admin/kanban')
+    revalidatePath('/', 'layout')
 }
 
 export async function searchTasks(query: string) {

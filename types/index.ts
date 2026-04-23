@@ -5,6 +5,7 @@ export type Profile = {
     avatar_url: string | null
     role: 'admin' | 'member'
     job_title: string | null
+    digest_enabled?: boolean
 }
 
 export type Project = {

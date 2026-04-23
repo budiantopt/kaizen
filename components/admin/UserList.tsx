@@ -208,7 +208,7 @@ function ChangePasswordForm({ profile, onCancel }: { profile: Profile, onCancel:
 
 import { createKpi, deleteKpi, toggleKpiStatus } from '@/app/actions/kpis'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Trash2, Key, Target, UserX } from 'lucide-react'
+import { Check, Trash2, Key, Target, UserX, Mail } from 'lucide-react'
 import { KPI } from '@/types'
 
 function GoalsManager({ userId }: { userId: string }) {
@@ -317,10 +317,11 @@ function GoalsManager({ userId }: { userId: string }) {
 }
 
 // Add to imports
-import { updateUserPassword } from '@/app/actions/users'
+import { updateUserPassword, toggleUserDigest } from '@/app/actions/users'
 
 function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePassword, onManageGoals }: UserRowProps) {
-    const [state, formAction, isPending] = useActionState(updateUserRole, initialState)
+    const [isPending, startTransition] = useTransition()
+    const [errorMessage, setErrorMessage] = useState('')
     const [isResetPending, startReset] = useTransition()
 
     const handleOnboard = () => {
@@ -336,12 +337,6 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
         })
     }
 
-    useEffect(() => {
-        if (state.success) {
-            onCancel()
-        }
-    }, [state.success, onCancel])
-
     const handleDeleteUser = async () => {
         if (!confirm(`Are you absolutely sure you want to permanently delete the user ${profile.full_name || profile.email}? This cannot be undone.`)) return
 
@@ -353,9 +348,21 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
         }
     }
 
+    const handleSave = (formData: FormData) => {
+        setErrorMessage('')
+        startTransition(async () => {
+            const result = await updateUserRole(initialState, formData)
+            if (result?.success) {
+                onCancel()
+            } else if (result?.message) {
+                setErrorMessage(result.message)
+            }
+        })
+    }
+
     if (isEditing) {
         return (
-            <form action={formAction} className="p-4 flex items-center gap-4 bg-secondary/20">
+            <form action={handleSave} className="p-4 flex items-center gap-4 bg-secondary/20">
                 <input type="hidden" name="userId" value={profile.id} />
                 <div className="flex-1">
                     <p className="font-medium text-sm">{profile.full_name || 'No Name'}</p>
@@ -375,12 +382,18 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+                <div className="w-[100px]">
+                    <select name="digest_enabled" defaultValue={(profile.digest_enabled ?? true) ? 'true' : 'false'} className="w-full text-xs p-1 rounded border bg-background">
+                        <option value="true">Digest On</option>
+                        <option value="false">Digest Off</option>
+                    </select>
+                </div>
                 <div className="flex gap-2 items-center">
-                    {state.message && <span className="text-red-500 text-[10px]">{state.message}</span>}
-                    <button type="submit" disabled={isPending} className="text-xs bg-white text-black px-2 py-1 rounded font-medium">
+                    {errorMessage && <span className="text-red-500 text-[10px]">{errorMessage}</span>}
+                    <button type="submit" disabled={isPending} className="text-xs bg-white text-black px-2 py-1 rounded font-medium disabled:opacity-50">
                         {isPending ? 'Saving' : 'Save'}
                     </button>
-                    <button type="button" onClick={onCancel} className="text-xs px-2 py-1 rounded hover:bg-muted">Cancel</button>
+                    <button type="button" onClick={onCancel} disabled={isPending} className="text-xs px-2 py-1 rounded hover:bg-muted disabled:opacity-50">Cancel</button>
                 </div>
             </form>
         )
@@ -415,6 +428,12 @@ function UserRow({ profile, isEditing, onEdit, onCancel, onOnboard, onChangePass
                     <Key className="w-3.5 h-3.5" />
                     Change Password
                 </button>
+                <div className="flex items-center gap-1 px-2 border border-border rounded py-1 bg-muted/10 cursor-default" title="Email Digest Status">
+                    <Mail className={`w-3 h-3 ${(profile.digest_enabled ?? true) ? 'text-green-500' : 'opacity-40'}`} />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                        {(profile.digest_enabled ?? true) ? 'ON' : 'OFF'}
+                    </span>
+                </div>
                 <div className="w-[1px] bg-border mx-1 h-6 self-center"></div>
                 <button
                     onClick={handleOnboard}

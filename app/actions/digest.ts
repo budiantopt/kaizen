@@ -4,13 +4,12 @@ import { differenceInCalendarDays, startOfDay, format, isBefore } from 'date-fns
 
 export async function sendDailyDigestToUsers() {
     const supabase = createAdminClient()
-    const { data: members } = await supabase.from('profiles').select('email').eq('role', 'member')
+    const { data: members } = await supabase.from('profiles').select('email').eq('digest_enabled', true)
     
     const recipientEmails = new Set<string>()
     if (members) {
         members.forEach(m => recipientEmails.add(m.email))
     }
-    recipientEmails.add('budianto@ruangguru.com')
     
     const results = await Promise.all(
         Array.from(recipientEmails).map(email => sendDailyDigest(email))
