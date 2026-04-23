@@ -177,6 +177,8 @@ function TaskCard({ task, isOverlay, onEdit }: { task: Task, isOverlay?: boolean
 
 function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: string, title: string, tasks: Task[], color: string, description?: string, onEdit?: (task: Task) => void }) {
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const [limit, setLimit] = useState(20)
+    
     const { setNodeRef } = useSortable({
         id: id,
         data: {
@@ -184,6 +186,9 @@ function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: st
             id: id,
         },
     })
+
+    const visibleTasks = tasks.slice(0, limit)
+    const hasMore = tasks.length > limit
 
     if (isCollapsed) {
         return (
@@ -243,11 +248,22 @@ function KanbanColumn({ id, title, tasks, color, description, onEdit }: { id: st
 
             {/* Droppable Area */}
             <div className="p-3 space-y-3 flex-1 overflow-y-auto">
-                <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                    {tasks.map(task => (
+                <SortableContext items={visibleTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                    {visibleTasks.map(task => (
                         <TaskCard key={task.id} task={task} onEdit={onEdit} />
                     ))}
                 </SortableContext>
+                
+                {hasMore && (
+                    <button 
+                        onClick={() => setLimit(prev => prev + 20)}
+                        className="w-full py-2.5 mt-2 text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary/30 rounded-lg border border-border/50 hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <RefreshCw className="w-3 h-3" />
+                        Load More ({tasks.length - limit} hidden)
+                    </button>
+                )}
+                
                 {tasks.length === 0 && (
                     <div className="h-full w-full min-h-[100px] flex items-center justify-center border border-dashed border-border/30 rounded-lg text-muted-foreground/30 text-xs text-center p-4">
                         Drop items here
