@@ -73,8 +73,20 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
         const formattedStart = formatGoogleDate(startDateStr)
         const formattedEnd = formatGoogleDate(endDateStr)
         
-        const startTimestamp = formattedStart ? `${formattedStart}T140000Z` : ''
-        const endTimestamp = formattedEnd ? `${formattedEnd}T150000Z` : ''
+        const now = new Date()
+        const utcHH = String(now.getUTCHours()).padStart(2, '0')
+        const utcMM = String(now.getUTCMinutes()).padStart(2, '0')
+        const utcSS = String(now.getUTCSeconds()).padStart(2, '0')
+        const startSuffix = `T${utcHH}${utcMM}${utcSS}Z`
+
+        const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
+        const endUtcHH = String(oneHourLater.getUTCHours()).padStart(2, '0')
+        const endUtcMM = String(oneHourLater.getUTCMinutes()).padStart(2, '0')
+        const endUtcSS = String(oneHourLater.getUTCSeconds()).padStart(2, '0')
+        const endSuffix = `T${endUtcHH}${endUtcMM}${endUtcSS}Z`
+
+        const startTimestamp = formattedStart ? `${formattedStart}${startSuffix}` : ''
+        const endTimestamp = formattedEnd ? `${formattedEnd}${endSuffix}` : ''
         const datesParam = (startTimestamp && endTimestamp) ? `${startTimestamp}/${endTimestamp}` : ''
         
         const params = new URLSearchParams({
