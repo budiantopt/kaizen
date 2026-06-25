@@ -357,6 +357,7 @@ export default function DashboardClient({
                         taskToEdit={taskToEdit}
                         defaultProjectId={activeProjectId}
                         currentUserRole={currentUserRole}
+                        currentUserId={currentUserId}
                     />
                 )
             }

@@ -21,6 +21,7 @@ interface TaskModalProps {
     taskToEdit?: Task | null
     defaultProjectId?: number | null
     currentUserRole?: 'admin' | 'member'
+    currentUserId?: string
 }
 
 const PRESET_COLORS = [
@@ -36,7 +37,7 @@ const PRESET_COLORS = [
     '#71717a', // Zinc
 ]
 
-export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId, currentUserRole }: TaskModalProps) {
+export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId, currentUserRole, currentUserId }: TaskModalProps) {
     const [state, formAction, isPending] = useActionState(upsertTask, initialState)
     const { addToast } = useToast()
     const evidenceLinkRef = useRef<HTMLInputElement>(null)
@@ -54,6 +55,40 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const handleCreateCalendar = () => {
+        const formEl = document.getElementById('task-form') as HTMLFormElement
+        if (!formEl) return
+        const formData = new FormData(formEl)
+        
+        const title = (formData.get('title') as string) || 'Untitled Task'
+        const startDateStr = (formData.get('start_date') as string) || ''
+        const endDateStr = (formData.get('end_date') as string) || ''
+        const remarks = (formData.get('remarks') as string) || ''
+        
+        const formatGoogleDate = (dateStr: string) => {
+            if (!dateStr) return ''
+            return dateStr.replace(/-/g, '')
+        }
+        
+        const formattedStart = formatGoogleDate(startDateStr)
+        const formattedEnd = formatGoogleDate(endDateStr)
+        
+        const startTimestamp = formattedStart ? `${formattedStart}T140000Z` : ''
+        const endTimestamp = formattedEnd ? `${formattedEnd}T150000Z` : ''
+        const datesParam = (startTimestamp && endTimestamp) ? `${startTimestamp}/${endTimestamp}` : ''
+        
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: title,
+            dates: datesParam,
+            details: remarks,
+            src: 'c_3e9b8ff62dd40d059b47c7f9572e90467bbe8eea7584e89d8d1fc8f847a018a4@group.calendar.google.com'
+        })
+        
+        const calendarUrl = `https://calendar.google.com/calendar/render?${params.toString()}`
+        window.open(calendarUrl, '_blank')
+    }
+
     // Reset state when opening/closing or changing task
     useEffect(() => {
         if (isOpen) {
@@ -67,12 +102,12 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                 setCurrentStatus(taskToEdit.status)
                 setCurrentPriority(taskToEdit.priority || 'medium')
             } else {
-                setSelectedAssignees([])
+                setSelectedAssignees(currentUserId ? [currentUserId] : [])
                 setCurrentStatus('todo')
                 setCurrentPriority('medium')
             }
         }
-    }, [isOpen, taskToEdit])
+    }, [isOpen, taskToEdit, currentUserId])
 
     // Close on success
     useEffect(() => {
@@ -362,6 +397,14 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                         disabled={isPending}
                     >
                         Cancel
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleCreateCalendar}
+                        className="cursor-pointer border border-border bg-secondary hover:bg-secondary/80 px-4 py-2 rounded-lg text-sm font-medium text-foreground transition-all flex items-center gap-2"
+                    >
+                        <CalendarIcon className="w-4 h-4" />
+                        Create Calendar
                     </button>
                     <button
                         type="submit"
