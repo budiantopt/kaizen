@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useActionState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon, Trash2 } from 'lucide-react'
 import { upsertTask, deleteTask } from '@/app/actions/tasks'
 import { useToast } from '@/components/ui/toast-context'
@@ -40,6 +41,7 @@ const PRESET_COLORS = [
 export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, defaultProjectId, currentUserRole, currentUserId }: TaskModalProps) {
     const [state, formAction, isPending] = useActionState(upsertTask, initialState)
     const { addToast } = useToast()
+    const router = useRouter()
     const evidenceLinkRef = useRef<HTMLInputElement>(null)
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
     const [currentStatus, setCurrentStatus] = useState<string>(taskToEdit?.status || 'todo')
@@ -107,6 +109,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
             try {
                 await deleteTask(taskToEdit.id)
                 addToast('Task deleted successfully', 'success')
+                router.refresh()
                 onClose()
             } catch (err: any) {
                 addToast(err.message || 'Failed to delete task', 'error')
@@ -137,9 +140,10 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
     // Close on success
     useEffect(() => {
         if (state.success) {
+            router.refresh()
             onClose()
         }
-    }, [state.success, onClose])
+    }, [state.success, onClose, router])
 
     if (!isOpen) return null
 
