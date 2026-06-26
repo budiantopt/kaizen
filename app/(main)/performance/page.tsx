@@ -17,7 +17,7 @@ export default async function PerformancePage() {
 
     const semStart = `${currentYear}-${isFirstSem ? '01' : '07'}-01`
     const semEnd = `${currentYear}-${isFirstSem ? '06' : '12'}-${isFirstSem ? '30' : '31'}`
-    const semesterLabel = isFirstSem ? `Semester 1 (${currentYear})` : `Semester 2 (${currentYear})`
+    const semesterLabel = isFirstSem ? `H1-${currentYear}` : `H2-${currentYear}`
 
     // Fetch Tasks Assigned in Semester
     const { data: tasks } = await supabase
@@ -209,7 +209,7 @@ export default async function PerformancePage() {
 
                 {/* Right Section: KPI */}
                 <div className="lg:col-span-8 bg-card border border-border rounded-xl p-6 shadow-sm h-full flex flex-col min-h-[400px]">
-                    <h2 className="text-lg font-semibold mb-4 shrink-0">Current Semester Goals</h2>
+                    <h2 className="text-lg font-semibold mb-4 shrink-0">Current {isFirstSem ? 'H1' : 'H2'} Goals</h2>
                     {kpis && kpis.length > 0 ? (
                         <ul className="space-y-3 flex-1">
                             {kpis.map((kpi: any) => (
@@ -232,7 +232,7 @@ export default async function PerformancePage() {
                         </ul>
                     ) : (
                         <div className="text-center py-12 text-muted-foreground bg-secondary/10 rounded-lg border border-dashed border-border flex-1 flex items-center justify-center">
-                            No KPIs set for this semester.
+                            No KPIs set for this period.
                         </div>
                     )}
                 </div>
