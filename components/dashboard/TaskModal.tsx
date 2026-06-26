@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useActionState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon, Trash2 } from 'lucide-react'
-import { upsertTask, deleteTask } from '@/app/actions/tasks'
+import { X, Calendar as CalendarIcon, Users, AlignLeft, CheckSquare, ChevronDown, ExternalLink, Link as LinkIcon, Check as CheckIcon } from 'lucide-react'
+import { upsertTask } from '@/app/actions/tasks'
 import { useToast } from '@/components/ui/toast-context'
 import { Project, Profile, Task } from '@/types'
 import { getInitials } from '@/lib/utils'
@@ -103,19 +103,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
         window.open(calendarUrl, '_blank')
     }
 
-    const handleDelete = async () => {
-        if (!taskToEdit) return
-        if (confirm('Are you sure you want to delete this task?')) {
-            try {
-                await deleteTask(taskToEdit.id)
-                addToast('Task deleted successfully', 'success')
-                router.refresh()
-                onClose()
-            } catch (err: any) {
-                addToast(err.message || 'Failed to delete task', 'error')
-            }
-        }
-    }
+
 
     // Reset state when opening/closing or changing task
     useEffect(() => {
@@ -165,16 +153,7 @@ export function TaskModal({ isOpen, onClose, projects, profiles, taskToEdit, def
                  <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                     <h2 className="text-lg font-bold">{isEdit ? 'Edit Task' : 'New Task'}</h2>
                     <div className="flex items-center gap-2">
-                        {isEdit && currentUserRole === 'admin' && (
-                            <button
-                                type="button"
-                                onClick={handleDelete}
-                                title="Delete Task"
-                                className="cursor-pointer text-red-500 hover:text-red-400 hover:bg-red-500/10 p-1.5 rounded-md transition-colors mr-1 flex items-center justify-center"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        )}
+
                         {isEdit && (
                             <div className="flex items-center gap-1 bg-secondary rounded-full pl-3 pr-1 py-1">
                                 <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider mr-1">
